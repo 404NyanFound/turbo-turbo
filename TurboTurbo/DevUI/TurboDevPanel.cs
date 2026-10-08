@@ -192,20 +192,26 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.Label($"charge {m.Charge:0.000}   boost {m.Boost:0.000}");
         GUILayout.Label($"lambda {m.Lambda:0.000}   rpm {m.RpmNorm:0.000}");
         GUILayout.Label($"exhaustEnergy {m.ExhaustEnergy:0.000}   massFlow {m.MassFlow:0.000}");
-        GUILayout.Label($"EGT (manif) {m.GasTemperature + m.TurbineTemperatureDropK - PhysicsConstants.KelvinOffset:0.0} C");
-        GUILayout.Label($"turbineDrop {m.TurbineTemperatureDropK:0.0} C");
-        GUILayout.Label($"EGT (mouth) {m.GasTemperature - PhysicsConstants.KelvinOffset:0.0} C   gasDensity {m.GasDensity:0.000}");
+        GUILayout.Label($"EGT (man) {m.GasTemperature + m.TurbineTemperatureDropK - PhysicsConstants.KelvinOffset:0.0}   " +
+                        $"(dt) {m.TurbineTemperatureDropK:0.0}   " +
+                        $"(exh) {m.GasTemperature - PhysicsConstants.KelvinOffset:0.0} C");
+        GUILayout.Label($"gasDensity {m.GasDensity:0.000}");
         GUILayout.Label($"burn air {m.BurnFractionAir:0.000}   burn temp {m.BurnFractionTemp:0.000}   burn {m.BurnFraction:0.000}");
         GUILayout.Label($"cylTemp {m.CylinderTempK - PhysicsConstants.KelvinOffset:0.0} C   blockTemp {m.EngineTempK - PhysicsConstants.KelvinOffset:0.0} C   thermostat {m.ThermostatOpen:0.00}");
         GUILayout.Label($"exhaustVelocity {m.ExhaustVelocity:0.00} m/s");
         GUILayout.Label($"absSpeed {host.AbsSpeed:0.0} m/s ({host.AbsSpeed * PhysicsConstants.MpsToKmh:0.0} km/h)");
 
+        var stack = host.Stack;
+        GUILayout.Label($"stackWall {stack.ExhaustWallTempK - PhysicsConstants.KelvinOffset:0.0} C   " +
+                        $"wetStack {stack.WetStack:0.00}   vapour {stack.Vapour:0.00}");
+        GUILayout.Label($"deposit {stack.DepositRate:0.000}/s   slip {stack.SlipRate:0.000}/s   " +
+                        $"evap {stack.EvaporateRate:0.000}/s   overflow {stack.Overflow:0.000}/s");
+
         for (var i = 0; i < host.Exhausts.Count; i++)
         {
             var e = host.Exhausts[i];
             GUILayout.Label($"exhaust {i}: smoke {e.Smoke.ParticleCount} p, " +
-                            $"shimmer {e.Shimmer.ParticleCount} p, " +
-                            $"wetStack {e.Smoke.Model.WetStackAccumulator:0.00}");
+                            $"shimmer {e.Shimmer.ParticleCount} p");
         }
 
         GUILayout.EndVertical();
