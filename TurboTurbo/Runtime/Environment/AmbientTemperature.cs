@@ -1,9 +1,6 @@
-using TurboTurbo.Configuration;
-using TurboTurbo.Runtime.Seasons;
-
 using UnityEngine;
 
-namespace TurboTurbo.Runtime;
+namespace TurboTurbo.Runtime.Environment;
 
 /// <summary>
 /// Ambient temperature seen by the simulation. The game object periodically polls its source,
