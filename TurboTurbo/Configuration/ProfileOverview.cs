@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using DV.Localization;
+
 using TurboTurbo.Profiles;
 using TurboTurbo.Profiles.Storage;
 using TurboTurbo.Runtime;
@@ -24,16 +26,6 @@ internal sealed class ProfileOverview
         "This locomotive has no diesel engine, so TurboTurbo cannot attach its simulation.";
 
     private static readonly string[] LayerOrder = { "Built-in", "Mod", "User" };
-
-    // These locos have no diesel exhaust to simulate, so they get no profile row.
-    // This won't exclude modded vehicles, but these are harder to check when we don't have a TrainCar object yet.
-    private static readonly HashSet<string> ExcludedLiveries = new(StringComparer.Ordinal)
-    {
-        "HandCar",
-        "LocoMicroshunter",
-        "LocoS060",
-        "LocoS282A",
-    };
 
     private static readonly Color32 PillFill = new(0x4A, 0x4A, 0x4A, 0xFF);
     private static readonly Color32 PillText = new(0xD0, 0xD0, 0xD0, 0xFF);
@@ -66,20 +58,6 @@ internal sealed class ProfileOverview
         GUILayout.EndVertical();
     }
 
-    private List<LiveryCatalog.LiveryInfo> OrderedLiveries()
-    {
-        var list = LiveryCatalog.GetLiveries().Where(l => !ExcludedLiveries.Contains(l.Id)).ToList();
-        list.Sort((a, b) =>
-        {
-            var byGroup = b.IsModded.CompareTo(a.IsModded);
-            if (byGroup != 0) return byGroup;
-
-            var byName = string.Compare(a.Name, b.Name, StringComparison.Ordinal);
-            return byName != 0 ? byName : string.Compare(a.Id, b.Id, StringComparison.Ordinal);
-        });
-        return list;
-    }
-
     private void DrawHeader()
     {
         GUILayout.BeginHorizontal();
@@ -90,6 +68,15 @@ internal sealed class ProfileOverview
         GUILayout.Label("Actions", Styles.BoldLabel, GUILayout.Width(ActionsWidth));
         GUILayout.EndHorizontal();
         Styles.HLine();
+    }
+
+    private static List<LiveryCatalog.LiveryInfo> OrderedLiveries()
+    {
+        return LiveryCatalog
+            .GetLiveries()
+            .OrderBy(x => x.IsModded)
+            .ThenBy(x => x.DisplayName, StringComparer.Create(LocalizationAPI.CC, false))
+            .ToList();
     }
 
     private static ProfileRowContext BuildContext(
@@ -116,7 +103,7 @@ internal sealed class ProfileOverview
         GUILayout.Label(ctx.BoardedThisLivery ? new GUIContent("▶", "You have boarded this locomotive.") : GUIContent.none,
             Styles.RowLabel, GUILayout.Width(MarkerWidth));
         GUILayout.Label(
-            new GUIContent(ctx.Livery.Name, "Board this locomotive to create or edit its profile."),
+            new GUIContent(ctx.Livery.DisplayName, "Board this locomotive to create or edit its profile."),
             Styles.RowLabel, GUILayout.Width(NameWidth));
 
         DrawLayerSlots(present);

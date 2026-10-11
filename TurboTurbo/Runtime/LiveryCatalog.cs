@@ -14,7 +14,30 @@ namespace TurboTurbo.Runtime;
 /// </summary>
 internal static class LiveryCatalog
 {
-    internal record struct LiveryInfo(string Id, string TypeId, string Name, bool IsModded, bool IsLoco, bool IsHidden);
+    // these locos have no diesel exhaust to simulate, so they are excluded from the catalog.
+    // this won't exclude modded vehicles, but these are harder to check when we don't have a TrainCar object yet.
+    private static readonly HashSet<string> ExcludedLiveries = new(StringComparer.Ordinal)
+    {
+        "HandCar",
+        "LocoMicroshunter",
+        "LocoS060",
+        "LocoS282A",
+    };
+    
+    internal record struct LiveryInfo(string Id, string TypeId, string DisplayName, string LiveryName, bool IsModded, bool IsLoco, bool IsHidden)
+    {
+        public static LiveryInfo FromLivery(TrainCarLivery livery)
+        {
+            return new LiveryInfo(
+                livery.id,
+                livery.parentType != null ? livery.parentType.id : "",
+                ResolveName(livery),
+                livery.name,
+                !Enum.IsDefined(typeof(TrainCarType), livery.v1),
+                livery.parentType != null && CarTypes.IsLocomotive(livery),
+                livery.isHidden);
+        }
+    }
 
     internal static List<LiveryInfo> GetLiveries()
     {
@@ -23,14 +46,9 @@ internal static class LiveryCatalog
 
         return model.Liveries
             .Where(livery => livery != null)
-            .Select(livery => new LiveryInfo(
-                livery.id,
-                livery.parentType != null ? livery.parentType.id : "",
-                ResolveName(livery),
-                !Enum.IsDefined(typeof(TrainCarType), livery.v1),
-                livery.parentType != null && CarTypes.IsLocomotive(livery),
-                livery.isHidden))
+            .Select(LiveryInfo.FromLivery)
             .Where(livery => livery is { IsLoco: true, IsHidden: false })
+            .Where(livery => !ExcludedLiveries.Contains(livery.Id))
             .OrderBy(livery => livery.Id, StringComparer.Ordinal)
             .ToList();
     }
