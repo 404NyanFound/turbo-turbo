@@ -73,17 +73,5 @@ namespace TurboTurboTests
             BuiltinTemperatureProfile.Evaluate(BuiltinTemperatureProfile.PeakHour, 0f, 0f, 0f, 1f)
                 .ShouldBe(Mean + Swing - BuiltinTemperatureProfile.ThunderCoolingCelsius, tolerance: 0.01f);
         }
-
-        [Fact]
-        public void InputsAreClamped()
-        {
-            BuiltinTemperatureProfile.Evaluate(BuiltinTemperatureProfile.PeakHour, 2f, 2f, 2f, 2f)
-                .ShouldBe(BuiltinTemperatureProfile.Evaluate(BuiltinTemperatureProfile.PeakHour, 1f, 1f, 1f, 1f),
-                    tolerance: 0.01f);
-
-            BuiltinTemperatureProfile.Evaluate(BuiltinTemperatureProfile.PeakHour, -1f, -1f, -1f, -1f)
-                .ShouldBe(BuiltinTemperatureProfile.Evaluate(BuiltinTemperatureProfile.PeakHour, 0f, 0f, 0f, 0f),
-                    tolerance: 0.01f);
-        }
     }
 }

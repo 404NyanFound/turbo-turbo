@@ -1,3 +1,5 @@
+using TurboTurbo.Configuration;
+
 using UnityEngine;
 
 namespace TurboTurbo.Runtime.Environment;
@@ -74,7 +76,7 @@ internal sealed class AmbientTemperature : MonoBehaviour
 
     private void RefreshInternal()
     {
-        if (_seasons.TryBind())
+        if (SettingsStore.Current.UseSeasons && _seasons.TryBind())
         {
             var seasons = _seasons.GetCelsius();
             if (seasons.IsSuccess)

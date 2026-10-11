@@ -4,6 +4,7 @@ using TurboTurbo.Configuration.Sections;
 using TurboTurbo.Profiles;
 using TurboTurbo.Profiles.Storage;
 using TurboTurbo.Runtime;
+using TurboTurbo.Runtime.Environment;
 
 using UnityEngine;
 
@@ -50,6 +51,8 @@ internal static class SettingsPanel
             SettingsStore.Current.OpenProfileEditor, "Open profile editor", Styles.KeybindButton, GUILayout.Width(KeybindWidth));
         GUILayout.EndHorizontal();
 
+        DrawEnvironment(entry);
+
         DrawAuthoring(entry);
 
         GUILayout.Space(8f);
@@ -60,6 +63,32 @@ internal static class SettingsPanel
         if (_tooltip != null && Event.current.type == EventType.Repaint)
         {
             _tooltip.Tooltip = GUI.tooltip;
+        }
+    }
+
+    private static void DrawEnvironment(UnityModManager.ModEntry thisMod)
+    {
+        var settings = SettingsStore.Current;
+        var present = SeasonsReader.IsPresent();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(
+            new GUIContent("DV Seasons integration",
+                "Requires DV Seasons to be installed.\n\n" +
+                "When enabled, TurboTurbo will periodically query Seasons to provide the current temperature. " +
+                "Temperature readings are used to determine intake air temperature, component temperatures, and cooling rates.\n\n" +
+                "Without Seasons, TurboTurbo uses a simplified temperature model based on the current weather and time of day."),
+            GUILayout.Width(Styles.LabelWidth));
+        var enabled = GUI.enabled;
+        GUI.enabled = present;
+        var use = GUILayout.Toggle(settings.UseSeasons, GUIContent.none, Toggle, GUILayout.Width(16f));
+        GUI.enabled = enabled;
+        GUILayout.EndHorizontal();
+
+        if (use != settings.UseSeasons)
+        {
+            settings.UseSeasons = use;
+            settings.Save(thisMod);
         }
     }
 

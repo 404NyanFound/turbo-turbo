@@ -17,6 +17,8 @@ public class Settings : UnityModManager.ModSettings
 
     public bool DeveloperMode;
 
+    public bool UseSeasons = true;
+
     public List<LocoProfileXml> LocoProfiles = new();
 
     public bool IsAuthoring => AuthoringMode && !string.IsNullOrEmpty(AuthoringTargetModId);

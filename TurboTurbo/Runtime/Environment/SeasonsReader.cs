@@ -31,6 +31,9 @@ internal sealed class SeasonsReader
     /// <summary>True when binding failed in a way that will not recover this session.</summary>
     public bool IsDisabled { get; private set; }
 
+    /// <summary>True when DV Seasons is installed and its assembly is loaded.</summary>
+    public static bool IsPresent() => ModRegistry.Find(ModId)?.Assembly != null;
+
     /// <summary>
     /// Attempts to bind to DVSeasons. No-op if binding has already succeeded or failed.
     /// If binding fails, the reader latches into a failed state, to avoid repeatedly executing
@@ -41,17 +44,16 @@ internal sealed class SeasonsReader
         if (IsBound) return true;
         if (IsDisabled) return false;
 
-        _mod ??= ModRegistry.Find(ModId);
-        var assembly = _mod?.Assembly;
-        if (assembly == null)
+        if (!IsPresent())
         {
             Disable("not installed");
             return false;
         }
 
+        _mod ??= ModRegistry.Find(ModId);
         try
         {
-            return BindMembers(assembly);
+            return BindMembers(_mod.Assembly);
         }
         catch (Exception e)
         {
