@@ -157,6 +157,12 @@ internal sealed class EngineSimulationHost : MonoBehaviour
 
         _engine = result.Value;
 
+        // binding to a locomotive happens infrequently, and it is important that the models are initialised
+        // to the correct temperature, so the cost of calling Refresh() is acceptable here.
+        // we want to avoid reading a stale temperature here, especially if it happens just after a save (re)loads,
+        // which could result in the stale temperature being wildly off and the engine block spawning way too hot or cold.
+        AmbientTemperature.Refresh();
+
         // a loco whose engine is already running must not come up stone cold
         float? initialTemperatureK = _engine.EngineRunning ? RunningEngineTemperatureK : null;
 

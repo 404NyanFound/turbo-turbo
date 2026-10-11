@@ -15,7 +15,6 @@ internal sealed class TurboDevPanel : MonoBehaviour
     private string _diagLine = "orchestrator: ?\nspawner: ?";
     private float _diagTimer;
 
-    private float _ambientCelsius = AmbientTemperature.Celsius;
     private float _densityFalloff = SmokeParticles.DensityFalloff;
     private float _softParticlesFade = SmokeParticles.SoftParticlesFade;
     private float _fadeInSeconds = SmokeParticles.FadeInSeconds;
@@ -57,8 +56,6 @@ internal sealed class TurboDevPanel : MonoBehaviour
         DrawDiagnostics();
         GUILayout.Space(6f);
         DrawTelemetry();
-        GUILayout.Space(4f);
-        DrawAmbient();
         GUILayout.Space(4f);
         DrawDensityFalloff();
         GUILayout.Space(4f);
@@ -223,23 +220,6 @@ internal sealed class TurboDevPanel : MonoBehaviour
                             $"shimmer {e.Shimmer.ParticleCount} p");
         }
 
-        GUILayout.EndVertical();
-    }
-
-    private void DrawAmbient()
-    {
-        GUILayout.BeginVertical(GUI.skin.box);
-        GUILayout.BeginHorizontal();
-        GUILayout.Label(new GUIContent($"Ambient: {_ambientCelsius:0} C ({AmbientTemperature.Kelvin:0} K)",
-                "Ambient temperature driving intake, gas density and stack cooling for every loco."),
-            GUILayout.Width(240f));
-        var next = Mathf.Round(GUILayout.HorizontalSlider(_ambientCelsius, -40f, 50f));
-        GUILayout.EndHorizontal();
-        if (!Mathf.Approximately(next, _ambientCelsius))
-        {
-            _ambientCelsius = next;
-            AmbientTemperature.Celsius = next;
-        }
         GUILayout.EndVertical();
     }
 

@@ -41,6 +41,7 @@ public static class Main
         StockConfiguration.Apply();
 
         Orchestrator.Create();
+        AmbientTemperature.Create();
 
         DevPanelPresenter.Create();
         ProfileEditorPresenter.Create();
