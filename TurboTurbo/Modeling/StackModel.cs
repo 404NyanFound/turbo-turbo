@@ -106,7 +106,7 @@ public sealed class StackModel
     /// <summary>Condensed fuel deposit level [0..1].</summary>
     public float WetStack { get; private set; }
 
-    /// <summary>Normalized [0..1] white-vapour driver for the exhaust appearance.</summary>
+    /// <summary>Fuel vapour contents of the exhaust smoke.</summary>
     public float Vapour { get; private set; }
 
     /// <summary>Deposit fill rate [1/s].</summary>
@@ -170,6 +170,6 @@ public sealed class StackModel
         EvaporateRate = cleared / delta;
 
         var slipNorm = slip / Mathf.Max(1e-4f, s.ReferenceUnburned);
-        Vapour = Mathf.Clamp01(slipNorm + (WetStack * hotness));
+        Vapour = slipNorm + (WetStack * hotness);
     }
 }

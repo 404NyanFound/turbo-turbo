@@ -182,7 +182,7 @@ namespace TurboTurbo.Modeling
             var sootPower = Mathf.Pow(heat, s.SootPowerExponent);
             var sootAlpha = s.SootMaxAlpha * _soot * Mathf.Lerp(s.SootPowerFloor, 1f, sootPower);
 
-            var wetAlpha = s.WetStackMaxAlpha * Mathf.Clamp01(vapour);
+            var wetAlpha = s.WetStackMaxAlpha * vapour;
             var totalWeight = baseAlpha + wetAlpha + sootAlpha;
             var finalColor = (baseColor * baseAlpha
                               + s.ColorWetStack * wetAlpha
