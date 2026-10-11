@@ -121,7 +121,7 @@ namespace TurboTurbo.WorkBench
         [Header("Smoke model inputs")]
         public float lambda = 1.2f;
         [Range(0f, 1f)] public float rpmNorm = 0.5f;
-        [Range(0f, 1f)] public float heat;
+        [Range(0f, 1f)] public float exhaustEnergy;
 
         /// <summary>Normalized stack fuel-vapour driver from the stack model.</summary>
         [Range(0f, 1f)] public float vapour;
@@ -332,7 +332,7 @@ namespace TurboTurbo.WorkBench
         {
             var dt = Time.deltaTime;
 
-            Model.Update(lambda, rpmNorm, heat, engineOn, dt, vapour);
+            Model.Update(lambda, rpmNorm, exhaustEnergy, engineOn, dt, vapour);
 
             var s = tuning;
 
@@ -342,7 +342,7 @@ namespace TurboTurbo.WorkBench
             var noise = _ps.noise;
             noise.strength = s.turbulenceStrength * speedNorm;
 
-            var emissionRate = Mathf.Lerp(s.idleEmissionRate, s.fullEmissionRate, heat);
+            var emissionRate = Mathf.Lerp(s.idleEmissionRate, s.fullEmissionRate, exhaustEnergy);
             if (engineOn)
             {
                 _emitAccumulator += emissionRate * dt;

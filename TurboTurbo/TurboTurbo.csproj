@@ -36,6 +36,9 @@
     <Compile Include="..\WorkBench\Assets\Shimmer\ExhaustSmokeModel.cs">
       <Link>Modeling\ExhaustSmokeModel.cs</Link>
     </Compile>
+    <Compile Include="..\WorkBench\Assets\Shimmer\ExhaustSignalSet.cs">
+      <Link>Effects\ExhaustSignalSet.cs</Link>
+    </Compile>
     <Compile Include="..\WorkBench\Assets\Shimmer\ShimmerParticles.cs">
       <Link>Effects\ShimmerParticles.cs</Link>
     </Compile>
@@ -132,6 +135,10 @@
     </Reference>
     <Reference Include="DV.Utils">
       <HintPath>$(ManagedDir)\DV.Utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="DV.WeatherSystem">
+      <HintPath>$(ManagedDir)\DV.WeatherSystem.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

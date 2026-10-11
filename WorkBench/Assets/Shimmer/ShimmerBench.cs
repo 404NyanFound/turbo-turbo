@@ -7,8 +7,8 @@ namespace TurboTurbo.WorkBench
 {
     public class ShimmerBench : MonoBehaviour
     {
-        [Header("Heat signal")]
-        [Range(0f, 1f)] public float heat = 1f;
+        [Header("Total exhaust energy")]
+        [Range(0f, 1f)] public float exhaustEnergy = 1f;
 
         [Header("Background scroll speed (uv/s)")]
         public float backgroundScroll = 0.03f;
@@ -23,8 +23,17 @@ namespace TurboTurbo.WorkBench
         [Range(0f, 100f)] public float idleEmissionRate = 15f;
         [Range(0f, 300f)] public float fullEmissionRate = 75f;
 
+        [Header("Engine load signals")]
+        public bool engineOn = true;
+        [Range(0f, 3f)] public float vapour;
+        [Range(0f, 3f)] public float massFlow = 1f;
+        public float gasDensity = 0.5f;
+
         [Header("Movement speed")]
         [Range(0f, 8f)] public float moveSpeed = 1.5f;
+
+        private float _lastIdleRate = float.NaN;
+        private float _lastFullRate = float.NaN;
 
         private Renderer _background;
         private ShimmerParticles _particleEmitter;
@@ -88,6 +97,8 @@ namespace TurboTurbo.WorkBench
                 _smokeBench.tuning.idleEmissionRate = idleEmissionRate;
                 _smokeBench.tuning.fullEmissionRate = fullEmissionRate;
                 _smokeBench.Configure();
+                _lastIdleRate = idleEmissionRate;
+                _lastFullRate = fullEmissionRate;
                 ExhaustPlacement.PlaceAt(smokeGo.transform, vanillaExhaust.transform.position,
                     _frame.transform, exhaustOffset);
             }
@@ -95,19 +106,33 @@ namespace TurboTurbo.WorkBench
 
         private void Update()
         {
-            if (_particleEmitter != null)
-            {
-                _particleEmitter.SetFlow(heat);
-            }
-
             if (_smokeBench != null)
             {
-                _smokeBench.lambda = lambda;
-                _smokeBench.rpmNorm = rpmNorm;
-                _smokeBench.tuning.idleEmissionRate = idleEmissionRate;
-                _smokeBench.tuning.fullEmissionRate = fullEmissionRate;
-                _smokeBench.heat = heat;
+                // the density encoding is derived from the emission rates, so rebuild when they change
+                if (!Mathf.Approximately(_lastIdleRate, idleEmissionRate)
+                    || !Mathf.Approximately(_lastFullRate, fullEmissionRate))
+                {
+                    _smokeBench.tuning.idleEmissionRate = idleEmissionRate;
+                    _smokeBench.tuning.fullEmissionRate = fullEmissionRate;
+                    _smokeBench.Configure();
+                    _lastIdleRate = idleEmissionRate;
+                    _lastFullRate = fullEmissionRate;
+                }
             }
+
+            var signals = new ExhaustSignalSet
+            {
+                Lambda = lambda,
+                RpmNorm = rpmNorm,
+                ExhaustEnergy = exhaustEnergy,
+                Vapour = vapour,
+                MassFlow = massFlow,
+                GasDensity = gasDensity,
+                EngineOn = engineOn,
+                LocoVelocity = Vector3.right * moveSpeed,
+                AbsSpeed = moveSpeed,
+            };
+            signals.Apply(_smokeBench, _particleEmitter);
 
             Material bg = _background != null ? _background.sharedMaterial : null;
             if (bg != null && bg.mainTexture != null)
@@ -118,15 +143,6 @@ namespace TurboTurbo.WorkBench
             if (moveSpeed > 0.001f)
             {
                 _frame.transform.position += Vector3.right * (moveSpeed * Time.deltaTime);
-            }
-
-            if (_particleEmitter != null)
-            {
-                _particleEmitter.locoVelocity = Vector3.right * moveSpeed;
-            }
-            if (_smokeBench != null)
-            {
-                _smokeBench.locoVelocity = Vector3.right * moveSpeed;
             }
         }
 

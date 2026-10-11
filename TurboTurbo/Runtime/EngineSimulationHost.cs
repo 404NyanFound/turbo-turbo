@@ -278,36 +278,22 @@ internal sealed class EngineSimulationHost : MonoBehaviour
 
     private void UpdateEffects(bool engineOn)
     {
-        var velocity = TrainCar.GetVelocity();
-        var absSpeed = TrainCar.GetAbsSpeed();
-        var heat = CombustionModel.ExhaustEnergy;
-        var massFlow = CombustionModel.MassFlow;
-        var gasDensity = CombustionModel.GasDensity;
-        var vapour = Stack.Vapour;
+        var signals = new ExhaustSignalSet
+        {
+            Lambda = CombustionModel.Lambda,
+            RpmNorm = CombustionModel.RpmNorm,
+            ExhaustEnergy = CombustionModel.ExhaustEnergy,
+            Vapour = Stack.Vapour,
+            MassFlow = CombustionModel.MassFlow,
+            GasDensity = CombustionModel.GasDensity,
+            EngineOn = engineOn,
+            LocoVelocity = TrainCar.GetVelocity(),
+            AbsSpeed = TrainCar.GetAbsSpeed()
+        };
 
         foreach (var e in Exhausts)
         {
-            var smoke = e.Smoke;
-            smoke.lambda = CombustionModel.Lambda;
-            smoke.rpmNorm = CombustionModel.RpmNorm;
-            smoke.heat = heat;
-            smoke.vapour = vapour;
-            smoke.massFlow = massFlow;
-            smoke.gasDensity = gasDensity;
-            smoke.engineOn = engineOn;
-            smoke.locoVelocity = velocity;
-            smoke.absSpeed = absSpeed;
-
-            var shimmer = e.Shimmer;
-            shimmer.enabled = engineOn;
-            if (engineOn)
-            {
-                shimmer.SetFlow(heat);
-                shimmer.massFlow = massFlow;
-                shimmer.gasDensity = gasDensity;
-                shimmer.locoVelocity = velocity;
-                shimmer.absSpeed = absSpeed;
-            }
+            signals.Apply(e.Smoke, e.Shimmer);
         }
     }
 

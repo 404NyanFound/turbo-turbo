@@ -203,10 +203,10 @@ namespace TurboTurbo.Modeling
     public static class ParticleSimSpace
     {
         public static Vector3 Position(Transform simSpace, Vector3 position)
-            => simSpace?.InverseTransformPoint(position) ?? position;
+            => simSpace == null ? position : simSpace.InverseTransformPoint(position);
 
         public static Vector3 Direction(Transform simSpace, Vector3 direction)
-            => simSpace?.InverseTransformDirection(direction) ?? direction;
+            => simSpace == null ? direction : simSpace.InverseTransformDirection(direction);
     }
 
     public static class ExhaustPlacement
