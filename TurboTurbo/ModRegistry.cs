@@ -10,6 +10,9 @@ namespace TurboTurbo;
 /// </summary>
 internal static class ModRegistry
 {
+    /// <summary>
+    /// Finds a mod by its ID. Returns null if the mod is not present.
+    /// </summary>
     public static UnityModManager.ModEntry Find(string modId)
     {
         if (string.IsNullOrEmpty(modId)) return null;
@@ -21,16 +24,11 @@ internal static class ModRegistry
 
     public static List<UnityModManager.ModEntry> EligibleTargets(string excludeId)
     {
-        var mods = new List<UnityModManager.ModEntry>();
-        if (UnityModManager.modEntries == null) return mods;
+        if (UnityModManager.modEntries == null) return [];
 
-        foreach (var mod in UnityModManager.modEntries)
-        {
-            if (!mod.Enabled || mod.Info.Id == excludeId) continue;
-            if (string.IsNullOrEmpty(mod.Path)) continue;
-            mods.Add(mod);
-        }
-
-        return mods;
+        return UnityModManager.modEntries
+            .Where(mod => mod.Enabled && mod.Info.Id != excludeId)
+            .Where(mod => !string.IsNullOrEmpty(mod.Path))
+            .ToList();
     }
 }
