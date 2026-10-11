@@ -198,7 +198,8 @@ public sealed class CombustionModel
     public bool SurgeThisTick { get; private set; }
 
     public CombustionModel(Func<float> governorNorm, Func<float> fuelNorm, Func<float> rpmNorm,
-        Func<float> ambientTemperatureK, ICharger charger, Settings settings, ExhaustVelocitySettings velocity)
+        Func<float> ambientTemperatureK, ICharger charger, Settings settings, ExhaustVelocitySettings velocity,
+        float? initialTemperatureK = null)
     {
         Charger = charger ?? throw new ArgumentNullException(nameof(charger));
         Tuning = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -208,12 +209,9 @@ public sealed class CombustionModel
         _rpmNorm = rpmNorm ?? throw new ArgumentNullException(nameof(rpmNorm));
         _ambientTemperatureK = ambientTemperatureK ?? throw new ArgumentNullException(nameof(ambientTemperatureK));
 
-        var ambient = Mathf.Max(1f, _ambientTemperatureK());
-        CylinderTempK = ambient;
-        EngineTempK = ambient;
-        IntakeTempK = ambient;
-        CompressionTempK = ambient;
-        ManifoldTempK = ambient;
+        var initial = Mathf.Max(1f, initialTemperatureK ?? _ambientTemperatureK());
+        CylinderTempK = initial;
+        EngineTempK = initial;
     }
 
     /// <summary>

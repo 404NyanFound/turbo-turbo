@@ -40,6 +40,8 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         }
     }
 
+    private const float RunningEngineTemperatureK = 80f + PhysicsConstants.KelvinOffset;
+
     private Logger _log;
     private bool _simBound;
     private bool _loggedNoSim;
@@ -155,6 +157,9 @@ internal sealed class EngineSimulationHost : MonoBehaviour
 
         _engine = result.Value;
 
+        // a loco whose engine is already running must not come up stone cold
+        float? initialTemperatureK = _engine.EngineRunning ? RunningEngineTemperatureK : null;
+
         // suppliers: the model reads the ports through these closures
         CombustionModel = new CombustionModel(
             () => _engine.ThrottleValue,
@@ -163,7 +168,8 @@ internal sealed class EngineSimulationHost : MonoBehaviour
             () => AmbientTemperature.Kelvin,
             Profile.BuildCharger(),
             Profile.Combustion,
-            Profile.Velocity);
+            Profile.Velocity,
+            initialTemperatureK);
 
         Stack = new StackModel(Profile.Stack, AmbientTemperature.Kelvin);
 
