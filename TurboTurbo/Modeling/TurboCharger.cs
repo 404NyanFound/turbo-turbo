@@ -18,6 +18,8 @@ public sealed class TurboCharger : ICharger
         internal const float DefaultMinSpoolTau = 0.5f;
         internal const float DefaultThermalK = 0.8f;
         internal const float DefaultSurgeRateThreshold = 15f;
+        internal const float DefaultCompressionRatio = 16f;
+        internal const float DefaultIntakeNtu = 1f;
 
         public float LambdaCalibration { get; set; } = DefaultLambdaCalibration;
 
@@ -34,6 +36,10 @@ public sealed class TurboCharger : ICharger
         /// <summary>Governor drop rate [1/s] that triggers a surge while boost is high.</summary>
         public float SurgeRateThreshold { get; set; } = DefaultSurgeRateThreshold;
 
+        public float CompressionRatio { get; set; } = DefaultCompressionRatio;
+
+        public float IntakeNtu { get; set; } = DefaultIntakeNtu;
+
         public Settings()
         {
         }
@@ -47,6 +53,8 @@ public sealed class TurboCharger : ICharger
             MinSpoolTau = other.MinSpoolTau;
             ThermalK = other.ThermalK;
             SurgeRateThreshold = other.SurgeRateThreshold;
+            CompressionRatio = other.CompressionRatio;
+            IntakeNtu = other.IntakeNtu;
         }
     }
 
@@ -60,6 +68,10 @@ public sealed class TurboCharger : ICharger
     public bool Surging { get; private set; }
 
     public float LambdaCalibration => Tuning.LambdaCalibration;
+
+    public float CompressionRatio => Tuning.CompressionRatio;
+
+    public float IntakeNtu => Tuning.IntakeNtu;
 
     /// <summary>
     /// Per-stroke cylinder charge.

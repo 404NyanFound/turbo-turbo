@@ -148,13 +148,13 @@ public sealed class StackModel
 
         // cold walls and slow flow both raise the deposited share; StickMax leaves an escaping floor
         var unburnedRate = engineOn ? Mathf.Max(0f, unburned) : 0f;
-        var coldness = 1f - Smoothstep(s.CaptureColdK, s.CaptureHotK, ExhaustWallTempK);
+        var coldness = 1f - MathExt.Smoothstep(s.CaptureColdK, s.CaptureHotK, ExhaustWallTempK);
         var contact = Mathf.Lerp(s.ContactFullFlow, s.ContactIdle, 1f - flow);
         var stick = Mathf.Min(coldness * contact, s.StickMax);
         var deposit = stick * unburnedRate;
         var slip = (1f - stick) * unburnedRate;
 
-        var hotness = Smoothstep(s.ClearStartK, s.ClearFullK, ExhaustWallTempK);
+        var hotness = MathExt.Smoothstep(s.ClearStartK, s.ClearFullK, ExhaustWallTempK);
         var clearTau = s.ClearTime / 3f;
         var cleared = WetStack * hotness * (1f - Mathf.Exp(-delta / clearTau));
 
@@ -171,11 +171,5 @@ public sealed class StackModel
 
         var slipNorm = slip / Mathf.Max(1e-4f, s.ReferenceUnburned);
         Vapour = Mathf.Clamp01(slipNorm + (WetStack * hotness));
-    }
-
-    private static float Smoothstep(float edge0, float edge1, float x)
-    {
-        var t = Mathf.Clamp01(Mathf.InverseLerp(edge0, edge1, x));
-        return t * t * (3f - 2f * t);
     }
 }

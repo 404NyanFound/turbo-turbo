@@ -84,12 +84,51 @@ namespace TurboTurboTests
         [Fact]
         public void AtmosphericCharger_CopyConstructor_IsIndependent()
         {
-            var template = new AtmosphericCharger.Settings { EtaPeak = 0.8f };
+            var template = new AtmosphericCharger.Settings { EtaPeak = 0.8f, CompressionRatio = 17f, IntakeNtu = 0.2f };
             var clone = new AtmosphericCharger.Settings(template);
 
             clone.EtaPeak.ShouldBe(0.8f);
             clone.EtaPeak = 0.5f;
             template.EtaPeak.ShouldBe(0.8f);
+            clone.CompressionRatio = 20f;
+            template.CompressionRatio.ShouldBe(17f);
+            clone.IntakeNtu = 0.5f;
+            template.IntakeNtu.ShouldBe(0.2f);
+        }
+
+        [Fact]
+        public void TurboCharger_DefaultCompression_And_IntakeNtu_AreTurboValues()
+        {
+            var settings = new TurboCharger.Settings();
+            settings.CompressionRatio.ShouldBe(16f);
+            settings.IntakeNtu.ShouldBe(1f);
+
+            var charger = new TurboCharger(settings);
+            charger.CompressionRatio.ShouldBe(16f);
+            charger.IntakeNtu.ShouldBe(1f);
+        }
+
+        [Fact]
+        public void AtmosphericCharger_DefaultCompression_And_IntakeNtu_AreAspiratedValues()
+        {
+            var settings = new AtmosphericCharger.Settings();
+            settings.CompressionRatio.ShouldBe(18f);
+            settings.IntakeNtu.ShouldBe(0.15f);
+
+            var charger = new AtmosphericCharger(settings);
+            charger.CompressionRatio.ShouldBe(18f);
+            charger.IntakeNtu.ShouldBe(0.15f);
+        }
+
+        [Fact]
+        public void AtmosphericCharger_Validate_ClampsCompressionAndIntakeNtu()
+        {
+            var settings = new AtmosphericCharger.Settings { CompressionRatio = 0.5f, IntakeNtu = -1f };
+
+            settings.Validate();
+
+            settings.CompressionRatio.ShouldBeGreaterThan(1f);
+            settings.IntakeNtu.ShouldBeGreaterThanOrEqualTo(0f);
         }
 
         [Fact]

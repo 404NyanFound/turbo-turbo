@@ -15,6 +15,7 @@ internal sealed class TurboDevPanel : MonoBehaviour
     private string _diagLine = "orchestrator: ?\nspawner: ?";
     private float _diagTimer;
 
+    private float _ambientCelsius = AmbientTemperature.Celsius;
     private float _densityFalloff = SmokeParticles.DensityFalloff;
     private float _softParticlesFade = SmokeParticles.SoftParticlesFade;
     private float _fadeInSeconds = SmokeParticles.FadeInSeconds;
@@ -56,6 +57,8 @@ internal sealed class TurboDevPanel : MonoBehaviour
         DrawDiagnostics();
         GUILayout.Space(6f);
         DrawTelemetry();
+        GUILayout.Space(4f);
+        DrawAmbient();
         GUILayout.Space(4f);
         DrawDensityFalloff();
         GUILayout.Space(4f);
@@ -192,9 +195,11 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.Label($"charge {m.Charge:0.000}   boost {m.Boost:0.000}");
         GUILayout.Label($"lambda {m.Lambda:0.000}   rpm {m.RpmNorm:0.000}");
         GUILayout.Label($"exhaustEnergy {m.ExhaustEnergy:0.000}   massFlow {m.MassFlow:0.000}");
-        GUILayout.Label($"EGT (man) {m.GasTemperature + m.TurbineTemperatureDropK - PhysicsConstants.KelvinOffset:0.0}   " +
+        GUILayout.Label($"EGT (man) {m.ManifoldTempK - PhysicsConstants.KelvinOffset:0.0}   " +
                         $"(dt) {m.TurbineTemperatureDropK:0.0}   " +
                         $"(exh) {m.GasTemperature - PhysicsConstants.KelvinOffset:0.0} C");
+        GUILayout.Label($"intake {m.IntakeTempK - PhysicsConstants.KelvinOffset:0.0} C   " +
+                        $"compression {m.CompressionTempK - PhysicsConstants.KelvinOffset:0.0} C");
         GUILayout.Label($"gasDensity {m.GasDensity:0.000}");
         GUILayout.Label($"burn air {m.BurnFractionAir:0.000}   burn temp {m.BurnFractionTemp:0.000}   burn {m.BurnFraction:0.000}");
         GUILayout.Label($"cylTemp {m.CylinderTempK - PhysicsConstants.KelvinOffset:0.0} C   blockTemp {m.EngineTempK - PhysicsConstants.KelvinOffset:0.0} C   thermostat {m.ThermostatOpen:0.00}");
@@ -214,6 +219,23 @@ internal sealed class TurboDevPanel : MonoBehaviour
                             $"shimmer {e.Shimmer.ParticleCount} p");
         }
 
+        GUILayout.EndVertical();
+    }
+
+    private void DrawAmbient()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(new GUIContent($"Ambient: {_ambientCelsius:0} C ({AmbientTemperature.Kelvin:0} K)",
+                "Ambient temperature driving intake, gas density and stack cooling for every loco."),
+            GUILayout.Width(240f));
+        var next = Mathf.Round(GUILayout.HorizontalSlider(_ambientCelsius, -40f, 50f));
+        GUILayout.EndHorizontal();
+        if (!Mathf.Approximately(next, _ambientCelsius))
+        {
+            _ambientCelsius = next;
+            AmbientTemperature.Celsius = next;
+        }
         GUILayout.EndVertical();
     }
 

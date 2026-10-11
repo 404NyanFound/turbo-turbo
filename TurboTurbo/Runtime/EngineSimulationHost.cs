@@ -97,7 +97,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         var engineOn = _engine.EngineRunning;
         CombustionModel.Tick(Time.deltaTime, engineOn);
 
-        var ambient = PhysicsConstants.ReferenceAmbientK;
+        var ambient = AmbientTemperature.Kelvin;
         var unburned = CombustionModel.FuelNorm * (1f - CombustionModel.BurnFractionTemp);
         var flowNorm = CombustionModel.MassFlow / Mathf.Max(1e-4f, CombustionModel.Charger.ChargeAtFullPower);
         Stack.Tick(Time.deltaTime, engineOn, unburned, flowNorm, CombustionModel.GasTemperature, ambient);
@@ -160,12 +160,12 @@ internal sealed class EngineSimulationHost : MonoBehaviour
             () => _engine.ThrottleValue,
             () => _engine.FuelNormalized,
             () => _engine.RpmNormalized,
-            () => PhysicsConstants.ReferenceAmbientK,
+            () => AmbientTemperature.Kelvin,
             Profile.BuildCharger(),
             Profile.Combustion,
             Profile.Velocity);
 
-        Stack = new StackModel(Profile.Stack, PhysicsConstants.ReferenceAmbientK);
+        Stack = new StackModel(Profile.Stack, AmbientTemperature.Kelvin);
 
         _log.Info($"combustion bound (throttle: {_engine.ThrottlePort.id}, " +
                      $"fuel: {DieselEngineBinding.DescribePort(_engine.FuelPort)})");

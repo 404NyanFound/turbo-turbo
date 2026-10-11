@@ -455,7 +455,14 @@ namespace TurboTurboTests
         public void Xml_RoundTrip_PreservesFullTunedSettings()
         {
             var profile = ValidProfile("full");
-            profile.TurboCharger = new TurboCharger.Settings { LambdaCalibration = 1.7f, TauUp = 4f, ThermalK = 1.1f };
+            profile.TurboCharger = new TurboCharger.Settings
+            {
+                LambdaCalibration = 1.7f,
+                TauUp = 4f,
+                ThermalK = 1.1f,
+                CompressionRatio = 18f,
+                IntakeNtu = 0.15f,
+            };
             profile.Smoke = new ExhaustSmokeModel.Settings
             {
                 Density = 90f,
@@ -466,7 +473,13 @@ namespace TurboTurboTests
             profile.ShimmerEmitter = new ShimmerParticles.Settings { strength = 0.02f, yOffset = 0.3f };
             profile.Velocity = new ExhaustVelocitySettings { ExhaustVelocityCoefficient = 3.25f };
             profile.Combustion = new CombustionModel.Settings
-            { RatedExhaustTempK = 800f, TauCylinder = 9f, TauCooldownOpen = 420f, TauCooldownClosed = 3600f };
+            {
+                RatedExhaustTempK = 800f,
+                TauCylinder = 9f,
+                TauCooldownOpen = 420f,
+                TauCooldownClosed = 3600f,
+                ResidualGasFraction = 0.06f,
+            };
             profile.Stack = new StackModel.Settings { FillTime = 75f, ClearTime = 45f, StickMax = 0.6f };
 
             var restored = ProfileMapper.ToRuntime(Deserialize(Serialize(profile)));
@@ -474,6 +487,8 @@ namespace TurboTurboTests
             restored.TurboCharger.LambdaCalibration.ShouldBe(1.7f);
             restored.TurboCharger.TauUp.ShouldBe(4f);
             restored.TurboCharger.ThermalK.ShouldBe(1.1f);
+            restored.TurboCharger.CompressionRatio.ShouldBe(18f);
+            restored.TurboCharger.IntakeNtu.ShouldBe(0.15f);
             restored.Smoke.Density.ShouldBe(90f);
             restored.Smoke.ColorOilBurn.ShouldBe(new Color(0f, 1f, 0f, 1f));
             restored.Smoke.SootMaxAlpha.ShouldBe(0.5f);
@@ -486,6 +501,7 @@ namespace TurboTurboTests
             restored.Combustion.TauCylinder.ShouldBe(9f);
             restored.Combustion.TauCooldownOpen.ShouldBe(420f);
             restored.Combustion.TauCooldownClosed.ShouldBe(3600f);
+            restored.Combustion.ResidualGasFraction.ShouldBe(0.06f);
             restored.Stack.FillTime.ShouldBe(75f);
             restored.Stack.ClearTime.ShouldBe(45f);
             restored.Stack.StickMax.ShouldBe(0.6f);

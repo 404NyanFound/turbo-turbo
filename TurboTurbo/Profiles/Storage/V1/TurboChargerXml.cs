@@ -11,6 +11,8 @@ public sealed class TurboChargerXml
     internal const float DefaultMinSpoolTau = 0.5f;
     internal const float DefaultThermalK = 0.8f;
     internal const float DefaultSurgeRateThreshold = 15f;
+    internal const float DefaultCompressionRatio = 16f;
+    internal const float DefaultIntakeNtu = 1f;
 
     [DefaultValue(DefaultLambdaCalibration)]
     public float LambdaCalibration { get; set; } = DefaultLambdaCalibration;
@@ -32,4 +34,10 @@ public sealed class TurboChargerXml
 
     [DefaultValue(DefaultSurgeRateThreshold)]
     public float SurgeRateThreshold { get; set; } = DefaultSurgeRateThreshold;
+
+    [DefaultValue(DefaultCompressionRatio)]
+    public float CompressionRatio { get; set; } = DefaultCompressionRatio;
+
+    [DefaultValue(DefaultIntakeNtu)]
+    public float IntakeNtu { get; set; } = DefaultIntakeNtu;
 }

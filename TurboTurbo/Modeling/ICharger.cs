@@ -17,6 +17,12 @@ public interface ICharger
     /// </summary>
     float ChargeAtFullPower { get; }
 
+    /// <summary>Volume compression ratio of the cylinders.</summary>
+    float CompressionRatio { get; }
+
+    /// <summary>Manifold/aftercooler heat-transfer effectiveness at rated flow.</summary>
+    float IntakeNtu { get; }
+
     float Boost { get; }
     bool Surging { get; }
     float LambdaCalibration { get; }

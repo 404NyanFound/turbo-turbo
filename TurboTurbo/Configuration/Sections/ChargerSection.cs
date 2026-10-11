@@ -14,6 +14,18 @@ internal static class ChargerSection
         " * Lower it to make it run leaner.\n\n" +
         "As a starting guideline, bring the engine to full load, then adjust the calibration so that lambda remains just above 1.3.";
 
+    private const string CompressionRatioToolTip =
+        "Volume compression ratio of the cylinders.\n" +
+        "Higher values result in more compression. Naturally aspirated engines " +
+        "typically sit near 18, turbocharged engines somewhat lower.";
+
+    private const string IntakeNtuToolTip =
+        "Intake manifold heat transfer effectiveness at rated flow.\n" +
+        "When intake air is cooler than the block, the air is warmed up by it. If it is warmer (generally as a result of " +
+        "being warmed up by turbocharger compression) the air is instead cooled down.\n" +
+        " * On a naturally aspirated engine, this value tends to be low, as air only exchanges heat while flowing through the manifold.\n" +
+        " * On a turbocharged engine equipped with an intercooler, this value will be high.";
+
     public static Section Build(EngineSimulationHost host, Action onRequiresReconfigure, Action onToggle)
     {
         var model = host.CombustionModel;
@@ -55,6 +67,12 @@ internal static class ChargerSection
                 "Puts a lower limit on how much overfueling is able to shorten boost pressure build-up time.\n" +
                 "This is mostly a safeguard and should not be relied on to change engine behaviour.",
                 0.1f, 2f, false, () => t.MinSpoolTau, v => t.MinSpoolTau = v);
+            section.AddFloat("Compression ratio",
+                CompressionRatioToolTip,
+                10f, 25f, false, () => t.CompressionRatio, v => t.CompressionRatio = v, TweakGrade.Developer);
+            section.AddFloat("Intake NTU",
+                IntakeNtuToolTip,
+                0f, 3f, false, () => t.IntakeNtu, v => t.IntakeNtu = v, TweakGrade.Developer);
 
             // not yet used
             // section.AddFloat("surgeRateThreshold",
@@ -82,6 +100,12 @@ internal static class ChargerSection
                 "to the top RPM range.\nThe default value of 2 is generally realistic here (pressure loss scales with " +
                 "the square of RPM).",
                 0f, 4f, false, () => a.ChokeBeta, v => { a.ChokeBeta = v; a.Validate(); });
+            section.AddFloat("Compression ratio",
+                CompressionRatioToolTip,
+                10f, 25f, false, () => a.CompressionRatio, v => { a.CompressionRatio = v; a.Validate(); }, TweakGrade.Developer);
+            section.AddFloat("Intake NTU",
+                IntakeNtuToolTip,
+                0f, 3f, false, () => a.IntakeNtu, v => { a.IntakeNtu = v; a.Validate(); }, TweakGrade.Developer);
         }
 
         return section;

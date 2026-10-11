@@ -70,6 +70,8 @@ internal static class ProfileMapper
             MinSpoolTau = xml.MinSpoolTau,
             ThermalK = xml.ThermalK,
             SurgeRateThreshold = xml.SurgeRateThreshold,
+            CompressionRatio = xml.CompressionRatio,
+            IntakeNtu = xml.IntakeNtu,
         };
 
     private static TurboChargerXml ToXml(TurboCharger.Settings settings) =>
@@ -82,6 +84,8 @@ internal static class ProfileMapper
             MinSpoolTau = settings.MinSpoolTau,
             ThermalK = settings.ThermalK,
             SurgeRateThreshold = settings.SurgeRateThreshold,
+            CompressionRatio = settings.CompressionRatio,
+            IntakeNtu = settings.IntakeNtu,
         };
 
     private static AtmosphericCharger.Settings ToRuntime(AtmosphericXml xml) =>
@@ -91,6 +95,8 @@ internal static class ProfileMapper
             ChokeK = xml.ChokeK,
             ChokeBeta = xml.ChokeBeta,
             LambdaCalibration = xml.LambdaCalibration,
+            CompressionRatio = xml.CompressionRatio,
+            IntakeNtu = xml.IntakeNtu,
         };
 
     private static AtmosphericXml ToXml(AtmosphericCharger.Settings settings) =>
@@ -100,6 +106,8 @@ internal static class ProfileMapper
             ChokeK = settings.ChokeK,
             ChokeBeta = settings.ChokeBeta,
             LambdaCalibration = settings.LambdaCalibration,
+            CompressionRatio = settings.CompressionRatio,
+            IntakeNtu = settings.IntakeNtu,
         };
 
     private static ExhaustSmokeModel.Settings ToRuntime(SmokeModelXml xml) =>
@@ -271,8 +279,13 @@ internal static class ProfileMapper
                 TauCooldownOpen = xml.TauCooldownOpen,
                 TauCooldownClosed = xml.TauCooldownClosed,
                 CylinderGainK = xml.CylinderGainK,
-                ColdWallFloorK = xml.ColdWallFloorK,
-                WarmWallTargetK = xml.WarmWallTargetK,
+                PolytropicExponent = xml.PolytropicExponent,
+                CompressorEfficiency = xml.CompressorEfficiency,
+                CompressionHeatLoss = xml.CompressionHeatLoss,
+                InductionWallHeating = xml.InductionWallHeating,
+                ResidualGasFraction = xml.ResidualGasFraction,
+                ColdCompressionK = xml.ColdCompressionK,
+                WarmCompressionK = xml.WarmCompressionK,
                 MinBurnFractionAtCold = xml.MinBurnFractionAtCold,
             };
 
@@ -287,8 +300,13 @@ internal static class ProfileMapper
                 TauCooldownOpen = settings.TauCooldownOpen,
                 TauCooldownClosed = settings.TauCooldownClosed,
                 CylinderGainK = settings.CylinderGainK,
-                ColdWallFloorK = settings.ColdWallFloorK,
-                WarmWallTargetK = settings.WarmWallTargetK,
+                PolytropicExponent = settings.PolytropicExponent,
+                CompressorEfficiency = settings.CompressorEfficiency,
+                CompressionHeatLoss = settings.CompressionHeatLoss,
+                InductionWallHeating = settings.InductionWallHeating,
+                ResidualGasFraction = settings.ResidualGasFraction,
+                ColdCompressionK = settings.ColdCompressionK,
+                WarmCompressionK = settings.WarmCompressionK,
                 MinBurnFractionAtCold = settings.MinBurnFractionAtCold,
             };
 

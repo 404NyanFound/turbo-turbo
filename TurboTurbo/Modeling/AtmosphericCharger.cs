@@ -19,6 +19,8 @@ public sealed class AtmosphericCharger : ICharger
         internal const float DefaultChokeK = 0.25f;
         internal const float DefaultChokeBeta = 2f;
         internal const float DefaultLambdaCalibration = 0.49f;
+        internal const float DefaultCompressionRatio = 18f;
+        internal const float DefaultIntakeNtu = 0.15f;
 
         public float EtaPeak { get; set; } = DefaultEtaPeak;
 
@@ -32,6 +34,10 @@ public sealed class AtmosphericCharger : ICharger
 
         public float LambdaCalibration { get; set; } = DefaultLambdaCalibration;
 
+        public float CompressionRatio { get; set; } = DefaultCompressionRatio;
+
+        public float IntakeNtu { get; set; } = DefaultIntakeNtu;
+
         public Settings()
         {
         }
@@ -42,6 +48,8 @@ public sealed class AtmosphericCharger : ICharger
             ChokeK = other.ChokeK;
             ChokeBeta = other.ChokeBeta;
             LambdaCalibration = other.LambdaCalibration;
+            CompressionRatio = other.CompressionRatio;
+            IntakeNtu = other.IntakeNtu;
         }
 
         public void Validate()
@@ -49,6 +57,8 @@ public sealed class AtmosphericCharger : ICharger
             EtaPeak = Mathf.Max(0.01f, EtaPeak);
             ChokeK = Mathf.Clamp01(ChokeK);
             ChokeBeta = Mathf.Max(0f, ChokeBeta);
+            CompressionRatio = Mathf.Max(1.01f, CompressionRatio);
+            IntakeNtu = Mathf.Max(0f, IntakeNtu);
         }
     }
 
@@ -63,6 +73,10 @@ public sealed class AtmosphericCharger : ICharger
     public bool Surging => false;
 
     public float LambdaCalibration => Tuning.LambdaCalibration;
+
+    public float CompressionRatio => Tuning.CompressionRatio;
+
+    public float IntakeNtu => Tuning.IntakeNtu;
 
     public AtmosphericCharger(Settings settings)
     {

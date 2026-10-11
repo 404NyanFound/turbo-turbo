@@ -8,6 +8,8 @@ public sealed class AtmosphericXml
     internal const float DefaultChokeK = 0.25f;
     internal const float DefaultChokeBeta = 2f;
     internal const float DefaultLambdaCalibration = 0.49f;
+    internal const float DefaultCompressionRatio = 18f;
+    internal const float DefaultIntakeNtu = 0.15f;
 
     [DefaultValue(DefaultEtaPeak)]
     public float EtaPeak { get; set; } = DefaultEtaPeak;
@@ -20,4 +22,10 @@ public sealed class AtmosphericXml
 
     [DefaultValue(DefaultLambdaCalibration)]
     public float LambdaCalibration { get; set; } = DefaultLambdaCalibration;
+
+    [DefaultValue(DefaultCompressionRatio)]
+    public float CompressionRatio { get; set; } = DefaultCompressionRatio;
+
+    [DefaultValue(DefaultIntakeNtu)]
+    public float IntakeNtu { get; set; } = DefaultIntakeNtu;
 }
