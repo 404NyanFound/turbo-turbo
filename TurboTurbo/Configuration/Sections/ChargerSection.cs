@@ -52,13 +52,13 @@ internal static class ChargerSection
                 "producing less soot if the engine drops power briefly and then comes back on.",
                 0.1f, 4f, false, () => t.TauDown, v => t.TauDown = v, TweakGrade.Basic);
             section.AddFloat("Boost charge multiplier",
-                "Scales the maximum amount of boost pressure supplied by the turbocharger.\n" +
+                "Scales the maximum amount of boost pressure supplied by the turbocharger, on top of atmospheric.\n" +
                 "Changing this affects the amount of air available to the engine at full load (where the turbo " +
                 "is most effective), but it has little effect at low load (where the turbo hardly does anything).\n" +
-                "A realistic value will generally sit somewhere in the 2 - 2.5 range.\n" +
+                "A realistic value will generally sit somewhere in the 1 - 1.8 range.\n" +
                 "Adjusting this affects available air at full power, and therefore may require you to make a " +
                 "corresponding change to lambda calibration as well.",
-                0f, 3f, false, () => t.BoostChargeMultiplier, v => t.BoostChargeMultiplier = v);
+                0f, 2.5f, false, () => t.BoostChargeMultiplier, v => t.BoostChargeMultiplier = v);
             section.AddFloat("Thermal K",
                 "Thermal feedback strength. Higher values cause quicker boost build-up when overfueling.",
                 0f, 3f, false, () => t.ThermalK, v => t.ThermalK = v);
