@@ -163,6 +163,10 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         // we want to avoid reading a stale temperature here, especially if it happens just after a save (re)loads,
         // which could result in the stale temperature being wildly off and the engine block spawning way too hot or cold.
         AmbientTemperature.Refresh();
+        if (AmbientTemperature.Source == AmbientSource.None)
+        {
+            _log.Warn("failed to read temperature from seasons or builtin, falling back to 20C");
+        }
 
         // a loco whose engine is already running must not come up stone cold
         float? initialTemperatureK = _engine.EngineRunning ? RunningEngineTemperatureK : null;

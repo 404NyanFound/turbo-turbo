@@ -1,6 +1,7 @@
 using TurboTurbo.Assets;
 using TurboTurbo.Configuration;
 using TurboTurbo.Runtime;
+using TurboTurbo.Runtime.Environment;
 using TurboTurbo.WorkBench;
 
 using UnityEngine;
@@ -54,6 +55,8 @@ internal sealed class TurboDevPanel : MonoBehaviour
         DrawTargetSelector();
         GUILayout.Space(6f);
         DrawDiagnostics();
+        GUILayout.Space(6f);
+        DrawAmbient();
         GUILayout.Space(6f);
         DrawTelemetry();
         GUILayout.Space(4f);
@@ -173,6 +176,22 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.Label(_diagLine);
         GUILayout.EndVertical();
     }
+
+    private static void DrawAmbient()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+        GUILayout.Label(new GUIContent(
+                $"Ambient: {AmbientTemperature.Celsius:0.0} C   ({AmbientTemperature.Kelvin:0} K)   source: {SourceLabel(AmbientTemperature.Source)}",
+                "Ambient temperature driving intake, gas density and stack cooling for every loco."));
+        GUILayout.EndVertical();
+    }
+
+    private static string SourceLabel(AmbientSource source) => source switch
+    {
+        AmbientSource.Seasons => "DV Seasons",
+        AmbientSource.Builtin => "builtin",
+        _ => "reference"
+    };
 
     private void DrawTelemetry()
     {

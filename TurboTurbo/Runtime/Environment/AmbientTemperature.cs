@@ -3,18 +3,23 @@ using UnityEngine;
 namespace TurboTurbo.Runtime.Environment;
 
 /// <summary>
-/// Ambient temperature seen by the simulation. The game object periodically polls its source,
-/// writing the temperature to its static <see cref="Kelvin"/> and <see cref="Celsius"/> properties.
+/// Ambient temperature seen by the simulation. The game object periodically polls its sources,
+/// preferring DV Seasons and otherwise approximating from the game's weather system, and writes
+/// the resulting temperature to its static <see cref="Kelvin"/> and <see cref="Celsius"/> properties.
 /// </summary>
 internal sealed class AmbientTemperature : MonoBehaviour
 {
     private const float UpdateIntervalSeconds = 10f;
 
     private readonly SeasonsReader _seasons = new();
+    private readonly BuiltinWeatherReader _builtin = new();
 
     private float _nextUpdateAt;
 
     public static AmbientTemperature Instance { get; private set; }
+
+    /// <summary>Source of the currently applied ambient temperature.</summary>
+    public static AmbientSource Source { get; private set; } = AmbientSource.None;
 
     /// <summary>Ambient temperature [K].</summary>
     public static float Kelvin { get; set; } = PhysicsConstants.ReferenceAmbientK;
@@ -69,10 +74,24 @@ internal sealed class AmbientTemperature : MonoBehaviour
 
     private void RefreshInternal()
     {
-        if (!_seasons.TryBind()) return;
+        if (_seasons.TryBind())
+        {
+            var seasons = _seasons.GetCelsius();
+            if (seasons.IsSuccess)
+            {
+                Apply(seasons.Value, AmbientSource.Seasons);
+                return;
+            }
+        }
 
-        var result = _seasons.GetCelsius();
-        if (result.IsSuccess) Celsius = result.Value;
+        var builtin = _builtin.GetCelsius();
+        if (builtin.IsSuccess) Apply(builtin.Value, AmbientSource.Builtin);
+    }
+
+    private static void Apply(float celsius, AmbientSource source)
+    {
+        Celsius = celsius;
+        Source = source;
     }
 
     private static void OnUnload()
@@ -84,5 +103,6 @@ internal sealed class AmbientTemperature : MonoBehaviour
 
         Log.ForContext("ambient-temp").Info($"unloaded, reset ambient temperature to {PhysicsConstants.ReferenceAmbientK} K");
         Kelvin = PhysicsConstants.ReferenceAmbientK;
+        Source = AmbientSource.None;
     }
 }
