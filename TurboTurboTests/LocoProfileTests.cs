@@ -410,7 +410,8 @@ namespace TurboTurboTests
             xml.ShouldContain("<SmokeEmitter");
             xml.ShouldContain("<ShimmerEmitter");
             xml.ShouldNotContain("idleEmissionRate");
-            xml.ShouldNotContain("turbulenceStrength");
+            xml.ShouldNotContain("turbulenceStrengthMin");
+            xml.ShouldNotContain("turbulenceStrengthMax");
             xml.ShouldNotContain("idleRate");
             xml.ShouldNotContain("yOffset");
         }

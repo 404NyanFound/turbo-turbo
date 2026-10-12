@@ -57,7 +57,8 @@ namespace TurboTurbo.WorkBench
             internal const float DefaultSpeedNormMax = 15f;
             internal const float DefaultSpeedLifetimeScale = 0.3f;
             internal const float DefaultSpeedJitter = 0.5f;
-            internal const float DefaultTurbulenceStrength = 1.25f;
+            internal const float DefaultTurbulenceStrengthMin = 0.125f;
+            internal const float DefaultTurbulenceStrengthMax = 1.25f;
             internal const float DefaultTurbulenceFrequency = 0.5f;
             internal const float DefaultTurbulenceScrollSpeed = 0f;
             internal const float DefaultLightSaturation = 0.35f;
@@ -89,7 +90,9 @@ namespace TurboTurbo.WorkBench
 
             public float speedJitter = DefaultSpeedJitter;
 
-            public float turbulenceStrength = DefaultTurbulenceStrength;
+            public float turbulenceStrengthMin = DefaultTurbulenceStrengthMin;
+
+            public float turbulenceStrengthMax = DefaultTurbulenceStrengthMax;
 
             public float turbulenceFrequency = DefaultTurbulenceFrequency;
 
@@ -118,7 +121,8 @@ namespace TurboTurbo.WorkBench
                 speedNormMax = other.speedNormMax;
                 speedLifetimeScale = other.speedLifetimeScale;
                 speedJitter = other.speedJitter;
-                turbulenceStrength = other.turbulenceStrength;
+                turbulenceStrengthMin = other.turbulenceStrengthMin;
+                turbulenceStrengthMax = other.turbulenceStrengthMax;
                 turbulenceFrequency = other.turbulenceFrequency;
                 turbulenceScrollSpeed = other.turbulenceScrollSpeed;
                 lightSaturation = other.lightSaturation;
@@ -229,15 +233,13 @@ namespace TurboTurbo.WorkBench
             lvol.multiplyDragByParticleSize = false;
             lvol.multiplyDragByParticleVelocity = true;
 
-            // vanilla turbulence: static noise field (scrollSpeed 0) traversed by
-            // the moving particles, with per-particle random offsets. strength is
-            // speed-modulated in Update; Configure bakes the peak so the bench
-            // edit-mode preview shows the full field
+            // we use the noise module to inject random variation into particle velocity.
+            // strength of the noise is governed by train speed
             var noise = _ps.noise;
             noise.enabled = true;
             noise.quality = ParticleSystemNoiseQuality.High;
             noise.frequency = s.turbulenceFrequency;
-            noise.strength = s.turbulenceStrength;
+            noise.strength = s.turbulenceStrengthMin;
             noise.damping = true;
             noise.separateAxes = false;
             noise.scrollSpeed = s.turbulenceScrollSpeed;
@@ -356,7 +358,7 @@ namespace TurboTurbo.WorkBench
             var speedNorm = Mathf.Clamp01(absSpeed / s.speedNormMax);
 
             var noise = _ps.noise;
-            noise.strength = s.turbulenceStrength * speedNorm;
+            noise.strength = Mathf.Lerp(s.turbulenceStrengthMin, s.turbulenceStrengthMax, speedNorm);
 
             var emissionRate = Mathf.Lerp(s.idleEmissionRate, s.fullEmissionRate, exhaustEnergy);
             if (engineOn)

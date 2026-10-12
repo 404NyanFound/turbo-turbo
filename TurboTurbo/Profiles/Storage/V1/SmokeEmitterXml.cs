@@ -17,7 +17,8 @@ public sealed class SmokeEmitterXml
     internal const float DefaultSpeedNormMax = 15f;
     internal const float DefaultSpeedLifetimeScale = 0.3f;
     internal const float DefaultSpeedJitter = 0.5f;
-    internal const float DefaultTurbulenceStrength = 1.25f;
+    internal const float DefaultTurbulenceStrengthMin = 0.125f;
+    internal const float DefaultTurbulenceStrengthMax = 1.25f;
     internal const float DefaultTurbulenceFrequency = 0.5f;
     internal const float DefaultTurbulenceScrollSpeed = 0f;
     internal const float DefaultLightSaturation = 0.35f;
@@ -62,8 +63,11 @@ public sealed class SmokeEmitterXml
     [DefaultValue(DefaultSpeedJitter)]
     public float speedJitter = DefaultSpeedJitter;
 
-    [DefaultValue(DefaultTurbulenceStrength)]
-    public float turbulenceStrength = DefaultTurbulenceStrength;
+    [DefaultValue(DefaultTurbulenceStrengthMin)]
+    public float turbulenceStrengthMin = DefaultTurbulenceStrengthMin;
+
+    [DefaultValue(DefaultTurbulenceStrengthMax)]
+    public float turbulenceStrengthMax = DefaultTurbulenceStrengthMax;
 
     [DefaultValue(DefaultTurbulenceFrequency)]
     public float turbulenceFrequency = DefaultTurbulenceFrequency;

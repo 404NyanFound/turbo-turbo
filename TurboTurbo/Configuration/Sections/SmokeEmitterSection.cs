@@ -47,8 +47,10 @@ internal static class SmokeEmitterSection
             -1f, 2f, true, () => f.tuning.buoyancy, v => { foreach (var s in smokes) s.tuning.buoyancy = v; }, TweakGrade.Developer);
         section.AddFloat("Max angular velocity", "Max random spin speed [deg/s], sign-randomized per particle.",
             0f, 90f, false, () => f.tuning.angularVelocityMax, v => { foreach (var s in smokes) s.tuning.angularVelocityMax = v; }, TweakGrade.Developer);
-        section.AddFloat("Turbulence strength", "Turbulence noise field strength at full dispersion speed (zero at standstill).",
-            0f, 3f, false, () => f.tuning.turbulenceStrength, v => { foreach (var s in smokes) s.tuning.turbulenceStrength = v; }, TweakGrade.Developer);
+        section.AddFloat("Turbulence min strength", "Turbulence noise field strength at standstill.",
+            0f, 2.5f, false, () => f.tuning.turbulenceStrengthMin, v => { foreach (var s in smokes) s.tuning.turbulenceStrengthMin = v; }, TweakGrade.Developer);
+        section.AddFloat("Turbulence max strength", "Turbulence noise field strength at full dispersion speed.",
+            0f, 2.5f, false, () => f.tuning.turbulenceStrengthMax, v => { foreach (var s in smokes) s.tuning.turbulenceStrengthMax = v; }, TweakGrade.Developer);
         section.AddFloat("Turbulence frequency", "Turbulence noise field frequency (lower = larger cells).",
             0.05f, 2f, true, () => f.tuning.turbulenceFrequency, v => { foreach (var s in smokes) s.tuning.turbulenceFrequency = v; }, TweakGrade.Developer);
         section.AddFloat("Turbulence scroll speed", "Turbulence noise field scroll speed.",
