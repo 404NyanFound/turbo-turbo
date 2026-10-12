@@ -19,6 +19,9 @@ internal sealed class TurboDevPanel : MonoBehaviour
     private float _densityFalloff = SmokeParticles.DensityFalloff;
     private float _softParticlesFade = SmokeParticles.SoftParticlesFade;
     private float _fadeInSeconds = SmokeParticles.FadeInSeconds;
+    private float _texKnee = SmokeParticles.TexKnee;
+    private bool _texShoulder = SmokeParticles.TexShoulder;
+    private float _maxShadowFloor = SmokeParticles.Settings.DefaultMaxShadowFloor;
     private float _forceTempC = 20f;
 
     private TurboTooltipLayer _tooltip;
@@ -68,6 +71,12 @@ internal sealed class TurboDevPanel : MonoBehaviour
         DrawSoftParticlesFade();
         GUILayout.Space(4f);
         DrawFadeInSeconds();
+        GUILayout.Space(4f);
+        DrawMaxShadowFloor();
+        GUILayout.Space(4f);
+        DrawTexShoulder();
+        GUILayout.Space(4f);
+        DrawTexKnee();
         GUILayout.Space(4f);
         DrawDiagnosticsButtons();
 
@@ -185,7 +194,7 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.BeginVertical(GUI.skin.box);
         GUILayout.Label(new GUIContent(
                 $"Ambient: {AmbientTemperature.Celsius:0.0} C   ({AmbientTemperature.Kelvin:0} K)   source: {SourceLabel(AmbientTemperature.Source)}",
-                "Ambient temperature driving intake, gas density and stack cooling for every loco."));
+                "Ambient temperature driving intake, gas density and stack cooling."));
         GUILayout.EndVertical();
     }
 
@@ -250,7 +259,7 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.BeginVertical(GUI.skin.box);
         GUILayout.BeginHorizontal();
         GUILayout.Label(new GUIContent($"Force temperature: {_forceTempC:0} C",
-                "Teleports the engine block, cylinder and stack wall to this temperature."),
+                "Sets the engine block, cylinder and stack wall to this temperature."),
             GUILayout.Width(170f));
         _forceTempC = GUILayout.HorizontalSlider(_forceTempC, -20f, 80f);
         GUILayout.EndHorizontal();
@@ -304,7 +313,7 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.BeginVertical(GUI.skin.box);
         GUILayout.BeginHorizontal();
         GUILayout.Label(new GUIContent($"Soft particles: {_softParticlesFade:0.00} m",
-                "Distance over which smoke fades out as it approaches opaque geometry. 0 disables."),
+                "Distance over which smoke fades out as it approaches opaque geometry."),
             GUILayout.Width(170f));
         var next = GUILayout.HorizontalSlider(_softParticlesFade, 0f, 1f);
         GUILayout.EndHorizontal();
@@ -359,6 +368,83 @@ internal sealed class TurboDevPanel : MonoBehaviour
             foreach (var e in host.Exhausts)
             {
                 e.Smoke?.ApplyFadeInSeconds();
+            }
+        }
+    }
+
+    private void DrawMaxShadowFloor()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(new GUIContent($"Shadow floor: {_maxShadowFloor:0.00}",
+                "Upper bound for the shadow ramp floor"),
+            GUILayout.Width(170f));
+        var next = GUILayout.HorizontalSlider(_maxShadowFloor, 0f, 1f);
+        GUILayout.EndHorizontal();
+        if (!Mathf.Approximately(next, _maxShadowFloor))
+        {
+            _maxShadowFloor = next;
+            ApplyMaxShadowFloor();
+        }
+        GUILayout.EndVertical();
+    }
+
+    private void ApplyMaxShadowFloor()
+    {
+        var orchestrator = Orchestrator.Instance;
+        if (orchestrator == null) return;
+
+        foreach (var host in orchestrator.Hosts)
+        {
+            foreach (var e in host.Exhausts)
+            {
+                e.Smoke?.SetMaxShadowFloor(_maxShadowFloor);
+            }
+        }
+    }
+
+    private void DrawTexShoulder()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+        var next = GUILayout.Toggle(_texShoulder, new GUIContent(
+            "Enable soft shoulder"));
+        if (next != _texShoulder)
+        {
+            _texShoulder = next;
+            SmokeParticles.TexShoulder = next;
+            ApplyTexKnee();
+        }
+        GUILayout.EndVertical();
+    }
+
+    private void DrawTexKnee()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(new GUIContent($"Atlas knee: {_texKnee:0.00}",
+                "Soft shoulder lifting the mid-grey atlas toward white before the shadow ramp. Smaller = stronger."),
+            GUILayout.Width(170f));
+        var next = GUILayout.HorizontalSlider(_texKnee, 0.01f, 2f);
+        GUILayout.EndHorizontal();
+        if (!Mathf.Approximately(next, _texKnee))
+        {
+            _texKnee = next;
+            SmokeParticles.TexKnee = next;
+            ApplyTexKnee();
+        }
+        GUILayout.EndVertical();
+    }
+
+    private void ApplyTexKnee()
+    {
+        var orchestrator = Orchestrator.Instance;
+        if (orchestrator == null) return;
+
+        foreach (var host in orchestrator.Hosts)
+        {
+            foreach (var e in host.Exhausts)
+            {
+                e.Smoke?.ApplyTexKnee();
             }
         }
     }

@@ -7,6 +7,8 @@ Shader "TurboTurbo/Smoke"
         _FacingFloor ("Facing Floor", Range(0, 1)) = 0.6
         _Saturation ("Light Saturation", Range(0, 1)) = 0.35
         _MaxShadowFloor ("Max Shadow Floor", Range(0, 1)) = 0.65
+        _TexKnee ("Atlas Knee", Range(0.01, 2)) = 0.15
+        _TexShoulder ("Atlas Shoulder", Range(0, 1)) = 1
         _MinFadeDist ("Min Camera Fade Distance", Range(0, 10)) = 1
         _MaxFadeDist ("Max Camera Fade Distance", Range(0, 10)) = 5
         _DensityScale ("Density Scale", Float) = 1
@@ -38,6 +40,8 @@ Shader "TurboTurbo/Smoke"
             float _FacingFloor;
             float _Saturation;
             float _MaxShadowFloor;
+            float _TexKnee;
+            float _TexShoulder;
             float _MinFadeDist;
             float _MaxFadeDist;
             float _DensityScale;
@@ -116,12 +120,17 @@ Shader "TurboTurbo/Smoke"
                 half4 tex = tex2D(_MainTex, i.uv);
                 float alpha = tex.a * i.color.a * softFade;
 
+                // the atlas sits mostly around the grey point, so to make light
+                // smoke look bright enough, we lift it a bit
+                half3 shoulder = tex.rgb * (1.0 + _TexKnee) / (tex.rgb + _TexKnee);
+                half3 curve = lerp(tex.rgb, shoulder, _TexShoulder);
+
                 // compress the dynamic range on bright colours, to avoid white
                 // smoke having unnaturally dark shadows, while preserving
                 // detail in darker colours
                 half tintLum = Luminance(i.color.rgb);
                 half dynamicFloor = tintLum * _MaxShadowFloor;
-                half3 remappedTex = lerp(dynamicFloor.xxx, 1.0.xxx, tex.rgb);
+                half3 remappedTex = lerp(dynamicFloor.xxx, 1.0.xxx, curve);
 
                 float3 L = _WorldSpaceLightPos0.xyz;
                 float facing = lerp(_FacingFloor, 1.0, saturate(L.y));

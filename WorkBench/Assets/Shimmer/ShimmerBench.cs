@@ -23,6 +23,10 @@ namespace TurboTurbo.WorkBench
         [Range(0f, 100f)] public float idleEmissionRate = 15f;
         [Range(0f, 300f)] public float fullEmissionRate = 75f;
 
+        [Header("Smoke shader")]
+        [Range(0.01f, 2f)] public float texKnee = 0.15f;
+        public bool atlasShoulder = true;
+
         [Header("Engine load signals")]
         public bool engineOn = true;
         [Range(0f, 3f)] public float vapour;
@@ -118,6 +122,10 @@ namespace TurboTurbo.WorkBench
                     _lastIdleRate = idleEmissionRate;
                     _lastFullRate = fullEmissionRate;
                 }
+
+                SmokeParticles.TexKnee = texKnee;
+                SmokeParticles.TexShoulder = atlasShoulder;
+                _smokeBench.ApplyTexKnee();
             }
 
             var signals = new ExhaustSignalSet

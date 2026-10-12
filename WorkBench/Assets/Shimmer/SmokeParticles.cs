@@ -11,6 +11,8 @@ namespace TurboTurbo.WorkBench
     {
         private static readonly int LightSaturation = Shader.PropertyToID("_Saturation");
         private static readonly int MaxShadowFloor = Shader.PropertyToID("_MaxShadowFloor");
+        private static readonly int TexKneeId = Shader.PropertyToID("_TexKnee");
+        private static readonly int TexShoulderId = Shader.PropertyToID("_TexShoulder");
         private static readonly int MinFadeDist = Shader.PropertyToID("_MinFadeDist");
         private static readonly int MaxFadeDist = Shader.PropertyToID("_MaxFadeDist");
         private static readonly int DensityScale = Shader.PropertyToID("_DensityScale");
@@ -29,6 +31,12 @@ namespace TurboTurbo.WorkBench
 
         /// <summary>Absolute time [s] for a new smoke particle to reach full opacity.</summary>
         public static float FadeInSeconds = 0.07f;
+
+        /// <summary>Soft shoulder applied to the atlas before the shadow ramp. Smaller = stronger lift.</summary>
+        public static float TexKnee = 0.15f;
+
+        /// <summary>Blends the atlas soft shoulder in; false restores the raw atlas.</summary>
+        public static bool TexShoulder = true;
 
         // near-camera fade range, in metres
         private const float FadeDistMin = 1.5f;
@@ -285,6 +293,7 @@ namespace TurboTurbo.WorkBench
                 ApplyDensityFalloff();
                 ApplySoftParticlesFade();
                 ApplyFadeInSeconds();
+                ApplyTexKnee();
             }
         }
 
@@ -311,6 +320,13 @@ namespace TurboTurbo.WorkBench
         {
             _densityScale = value;
             if (_renderer != null) _renderer.material.SetFloat(DensityScale, value);
+        }
+
+        public void ApplyTexKnee()
+        {
+            if (_renderer == null) return;
+            _renderer.material.SetFloat(TexKneeId, TexKnee);
+            _renderer.material.SetFloat(TexShoulderId, TexShoulder ? 1f : 0f);
         }
 
         public void ApplyDensityFalloff()
