@@ -289,6 +289,7 @@ internal static class ProfileMapper
                 ColdCompressionK = xml.ColdCompressionK,
                 WarmCompressionK = xml.WarmCompressionK,
                 MinBurnFractionAtCold = xml.MinBurnFractionAtCold,
+                CrankingFuelPerStroke = xml.CrankingFuelPerStroke,
             };
 
     private static CombustionXml ToXml(CombustionModel.Settings settings) =>
@@ -310,6 +311,7 @@ internal static class ProfileMapper
                 ColdCompressionK = settings.ColdCompressionK,
                 WarmCompressionK = settings.WarmCompressionK,
                 MinBurnFractionAtCold = settings.MinBurnFractionAtCold,
+                CrankingFuelPerStroke = settings.CrankingFuelPerStroke,
             };
 
     private static StackModel.Settings ToRuntime(StackXml xml) =>

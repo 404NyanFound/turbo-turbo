@@ -27,6 +27,7 @@ public sealed class CombustionModel
         internal const float DefaultColdCompressionK = 620f;
         internal const float DefaultWarmCompressionK = 760f;
         internal const float DefaultMinBurnFractionAtCold = 0.85f;
+        internal const float DefaultCrankingFuelPerStroke = 0.25f;
 
         /// <summary>Block temperature [K] where the radiator thermostat begins to open.</summary>
         public const float ThermostatOpenK = 65f + PhysicsConstants.KelvinOffset;
@@ -55,6 +56,12 @@ public sealed class CombustionModel
         /// <summary>Floor on the temperature efficiency factor at the coldest extreme (0..1].</summary>
         public float MinBurnFractionAtCold { get; set; } = DefaultMinBurnFractionAtCold;
 
+        /// <summary>
+        /// Fuel injected per stroke while the starter cranks the engine [0..1], where 1 is a full rack.
+        /// The game only fuels the engine once it has caught; an idle stroke there is 0.1.
+        /// </summary>
+        public float CrankingFuelPerStroke { get; set; } = DefaultCrankingFuelPerStroke;
+
         public Settings()
         {
         }
@@ -75,6 +82,7 @@ public sealed class CombustionModel
             ColdCompressionK = other.ColdCompressionK;
             WarmCompressionK = other.WarmCompressionK;
             MinBurnFractionAtCold = other.MinBurnFractionAtCold;
+            CrankingFuelPerStroke = other.CrankingFuelPerStroke;
         }
 
         public void Validate()
@@ -93,6 +101,7 @@ public sealed class CombustionModel
             ColdCompressionK = Mathf.Max(0f, ColdCompressionK);
             WarmCompressionK = Mathf.Max(ColdCompressionK + 0.01f, WarmCompressionK);
             MinBurnFractionAtCold = Mathf.Clamp(MinBurnFractionAtCold, 0.01f, 1f);
+            CrankingFuelPerStroke = Mathf.Clamp01(CrankingFuelPerStroke);
         }
     }
 
@@ -217,13 +226,17 @@ public sealed class CombustionModel
     /// <summary>
     /// Advances the simulation by <paramref name="delta"/> seconds
     /// </summary>
-    public void Tick(float delta, bool engineOn)
+    public void Tick(float delta, bool engineOn, bool cranking = false)
     {
         var governor = Mathf.Clamp01(_governorNorm());
         var fuel = Mathf.Clamp01(_fuelNorm());
         var rpm = Mathf.Clamp01(_rpmNorm());
 
         var s = Tuning;
+
+        // the game only starts fueling once the engine has caught, but a real engine is fueled while cranking.
+        // max() keeps the handover seamless in case there is an overlap
+        if (cranking) fuel = Mathf.Max(fuel, s.CrankingFuelPerStroke * rpm);
 
         var fuelPerStroke = fuel / Mathf.Max(0.01f, rpm);
 

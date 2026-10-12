@@ -18,6 +18,7 @@ internal static class DieselEngineBinder
     private const string RpmSuffix = ".RPM_NORMALIZED";
     private const string FuelSuffix = ".FUEL_CONSUMPTION_NORMALIZED";
     private const string EngineOnSuffix = ".ENGINE_ON";
+    private const string IgnitionInProgressSuffix = ".IGNITION_IN_PROGRESS";
 
     /// <summary>
     /// Resolves a diesel engine binding from a simulation flow.
@@ -46,7 +47,8 @@ internal static class DieselEngineBinder
             throttlePort,
             rpmPort,
             FindPort(engine, FuelSuffix),
-            FindPort(engine, EngineOnSuffix));
+            FindPort(engine, EngineOnSuffix),
+            FindPort(engine, IgnitionInProgressSuffix));
     }
 
     /// <summary>

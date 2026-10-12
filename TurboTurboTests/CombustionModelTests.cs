@@ -758,5 +758,56 @@ namespace TurboTurboTests
 
             high.ExhaustVelocity.ShouldBeGreaterThan(low.ExhaustVelocity);
         }
+
+        // ------------------------------------------------------------
+        // cranking
+        // ------------------------------------------------------------
+
+        [Fact]
+        public void Cranking_WithoutGameFuel_InjectsCrankingFuelPerStroke()
+        {
+            var model = CreateModel();
+            _fuelNorm = 0f;
+            _rpmNorm = 0.1f;
+            model.Tick(0.016f, engineOn: false, cranking: true);
+
+            model.FuelPerStroke.ShouldBe(_perfectCompression.CrankingFuelPerStroke, tolerance: 0.001f);
+            model.FuelNorm.ShouldBe(_perfectCompression.CrankingFuelPerStroke * _rpmNorm, tolerance: 0.001f);
+        }
+
+        [Fact]
+        public void NotCranking_WithoutGameFuel_InjectsNothing()
+        {
+            var model = CreateModel();
+            _fuelNorm = 0f;
+            _rpmNorm = 0.1f;
+            model.Tick(0.016f, engineOn: false);
+
+            model.FuelPerStroke.ShouldBe(0f);
+            model.FuelNorm.ShouldBe(0f);
+        }
+
+        [Fact]
+        public void Cranking_WithMoreGameFuel_UsesGameFuel()
+        {
+            var model = CreateModel();
+            _rpmNorm = 0.1f;
+            _fuelNorm = _perfectCompression.CrankingFuelPerStroke * _rpmNorm * 2f;
+            model.Tick(0.016f, engineOn: true, cranking: true);
+
+            model.FuelNorm.ShouldBe(_fuelNorm, tolerance: 0.001f);
+        }
+
+        [Fact]
+        public void Cranking_ColdEngine_LeavesFuelUnburned()
+        {
+            var model = CreateModel(new CombustionModel.Settings());
+            _fuelNorm = 0f;
+            _rpmNorm = 0.1f;
+            model.Tick(0.016f, engineOn: false, cranking: true);
+
+            model.BurnFractionTemp.ShouldBeLessThan(1f);
+            model.ExhaustEnergy.ShouldBeGreaterThan(0f);
+        }
     }
 }

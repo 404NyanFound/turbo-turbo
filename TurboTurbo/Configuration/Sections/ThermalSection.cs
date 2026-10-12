@@ -58,6 +58,10 @@ internal static class ThermalSection
         section.AddFloat("Cold burn floor",
             "Maximum reachable combustion efficiency when the full cold-temperature penalty is applied.",
             0f, 1f, false, () => c.MinBurnFractionAtCold, v => { c.MinBurnFractionAtCold = v; c.Validate(); }, TweakGrade.Developer);
+        section.AddFloat("Cranking fuel",
+            "Fuel injected per stroke while the starter cranks the engine, where 1 is a full rack and 0.1 an idle stroke.\n" +
+            "This affects how much fuel vapour is emitted out of the exhaust stack.",
+            0f, 1f, false, () => c.CrankingFuelPerStroke, v => { c.CrankingFuelPerStroke = v; c.Validate(); }, TweakGrade.Developer);
 
         return section;
     }

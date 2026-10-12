@@ -18,6 +18,7 @@ public sealed class CombustionXml
     internal const float DefaultColdCompressionK = 620f;
     internal const float DefaultWarmCompressionK = 760f;
     internal const float DefaultMinBurnFractionAtCold = 0.85f;
+    internal const float DefaultCrankingFuelPerStroke = 0.25f;
 
     [DefaultValue(DefaultRatedExhaustTempK)]
     public float RatedExhaustTempK { get; set; } = DefaultRatedExhaustTempK;
@@ -60,4 +61,7 @@ public sealed class CombustionXml
 
     [DefaultValue(DefaultMinBurnFractionAtCold)]
     public float MinBurnFractionAtCold { get; set; } = DefaultMinBurnFractionAtCold;
+
+    [DefaultValue(DefaultCrankingFuelPerStroke)]
+    public float CrankingFuelPerStroke { get; set; } = DefaultCrankingFuelPerStroke;
 }

@@ -14,13 +14,15 @@ internal sealed class DieselEngineBinding
         Port throttlePort,
         Port rpmPort,
         Port fuelPort,
-        Port engineOnPort)
+        Port engineOnPort,
+        Port crankingPort)
     {
         Engine = engine;
         ThrottlePort = throttlePort;
         RpmPort = rpmPort;
         FuelPort = fuelPort;
         EngineOnPort = engineOnPort;
+        CrankingPort = crankingPort;
     }
 
     public DieselEngineDirect Engine { get; }
@@ -33,6 +35,8 @@ internal sealed class DieselEngineBinding
 
     public Port EngineOnPort { get; }
 
+    public Port CrankingPort { get; }
+
     public float ThrottleValue => ThrottlePort.Value;
 
     public float RpmNormalized => RpmPort.Value;
@@ -41,10 +45,13 @@ internal sealed class DieselEngineBinding
 
     public bool EngineRunning => EngineOnPort != null ? EngineOnPort.Value > 0.5f : RpmPort.Value > 0.05f;
 
+    public bool Cranking => CrankingPort != null && CrankingPort.Value > 0f;
+
     public static string DescribePort(Port port) => port != null ? port.id : "<missing>";
 
     /// <summary>Port dump for diagnostics.</summary>
     public string Describe() =>
         $"throttle={DescribePort(ThrottlePort)} rpm={DescribePort(RpmPort)} " +
-        $"engineOn={DescribePort(EngineOnPort)} fuel={DescribePort(FuelPort)}";
+        $"engineOn={DescribePort(EngineOnPort)} fuel={DescribePort(FuelPort)} " +
+        $"cranking={DescribePort(CrankingPort)}";
 }

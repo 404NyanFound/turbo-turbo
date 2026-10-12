@@ -98,12 +98,16 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         if (CombustionModel == null) return;
 
         var engineOn = _engine.EngineRunning;
-        CombustionModel.Tick(Time.deltaTime, engineOn);
+        var cranking = !engineOn && _engine.Cranking;
+        CombustionModel.Tick(Time.deltaTime, engineOn, cranking);
+
+        // the model fuels the engine while cranking, so the exhaust behaves as if it is running
+        var firing = engineOn || cranking;
 
         var ambient = AmbientTemperature.Kelvin;
         var unburned = CombustionModel.FuelNorm * (1f - CombustionModel.BurnFractionTemp);
         var flowNorm = CombustionModel.MassFlow / Mathf.Max(1e-4f, CombustionModel.Charger.ChargeAtFullPower);
-        Stack.Tick(Time.deltaTime, engineOn, unburned, flowNorm, CombustionModel.GasTemperature, ambient);
+        Stack.Tick(Time.deltaTime, firing, unburned, flowNorm, CombustionModel.GasTemperature, ambient);
 
         // TODO: properly attach the combustion model to the simulation graph.
         // then we can apply the combustion model's torque limit, but that
@@ -115,7 +119,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
 
         if (EffectsBound)
         {
-            UpdateEffects(engineOn);
+            UpdateEffects(firing);
         }
     }
 
@@ -284,7 +288,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         return shimmer;
     }
 
-    private void UpdateEffects(bool engineOn)
+    private void UpdateEffects(bool firing)
     {
         var signals = new ExhaustSignalSet
         {
@@ -294,7 +298,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
             Vapour = Stack.Vapour,
             MassFlow = CombustionModel.MassFlow,
             GasDensity = CombustionModel.GasDensity,
-            EngineOn = engineOn,
+            EngineOn = firing,
             LocoVelocity = TrainCar.GetVelocity(),
             Wind = AmbientTemperature.Wind
         };
