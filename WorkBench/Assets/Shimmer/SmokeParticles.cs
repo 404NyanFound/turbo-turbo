@@ -148,6 +148,9 @@ namespace TurboTurbo.WorkBench
 
         public Vector3 locoVelocity;
 
+        /// <summary>World wind velocity [m/s] carrying the plume.</summary>
+        public Vector3 windVelocity;
+
         /// <summary>Per-engine emission and appearance tuning, cloned at bind.</summary>
         public Settings tuning = new Settings();
 
@@ -165,6 +168,7 @@ namespace TurboTurbo.WorkBench
         private float _emitAccumulator;
         private AnimationCurve _sizeCurve;
         private float _densityScale = 1f;
+        private Vector3 _appliedWind;
 
         public int ParticleCount => _ps.particleCount;
 
@@ -249,6 +253,7 @@ namespace TurboTurbo.WorkBench
             vol.y = s.buoyancy;
             vol.x = 0f;
             vol.z = 0f;
+            _appliedWind = Vector3.zero;
 
             var em = _ps.emission;
             em.enabled = false;
@@ -328,6 +333,19 @@ namespace TurboTurbo.WorkBench
             _renderer.material.SetFloat(TexShoulderId, TexShoulder ? 1f : 0f);
         }
 
+        /// <summary>Advects the plume with the ambient wind through the world-space velocity offset.</summary>
+        public void ApplyWind()
+        {
+            if (_ps == null) return;
+
+            if (windVelocity == _appliedWind) return;
+            _appliedWind = windVelocity;
+
+            var vol = _ps.velocityOverLifetime;
+            vol.x = windVelocity.x;
+            vol.z = windVelocity.z;
+        }
+
         public void ApplyDensityFalloff()
         {
             if (_renderer != null) _renderer.material.SetFloat(DensityFalloffId, DensityFalloff);
@@ -352,7 +370,10 @@ namespace TurboTurbo.WorkBench
             var s = tuning;
 
             // smoke dispersion and turbulence scale with airspeed
-            var speedNorm = Mathf.Clamp01(locoVelocity.magnitude / s.speedNormMax);
+            var airVelocity = locoVelocity - windVelocity;
+            var speedNorm = Mathf.Clamp01(airVelocity.magnitude / s.speedNormMax);
+
+            ApplyWind();
 
             var noise = _ps.noise;
             noise.strength = Mathf.Lerp(s.turbulenceStrengthMin, s.turbulenceStrengthMax, speedNorm);

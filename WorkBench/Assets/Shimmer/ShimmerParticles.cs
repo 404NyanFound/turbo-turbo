@@ -142,6 +142,9 @@ namespace TurboTurbo
         /// Particles inherit this at emission, then drag decays it.</summary>
         public Vector3 locoVelocity;
 
+        /// <summary>World wind velocity [m/s] carrying the plume.</summary>
+        public Vector3 windVelocity;
+
         /// <summary>Per-engine emission and appearance tuning, cloned at bind.</summary>
         public Settings tuning = new Settings();
 
@@ -160,6 +163,7 @@ namespace TurboTurbo
         private float _emitAccumulator;
         private AnimationCurve _sizeCurve;
         private Gradient _alphaGradient;
+        private Vector3 _appliedWind;
 
         public int ParticleCount => _ps != null ? _ps.particleCount : 0;
 
@@ -216,6 +220,7 @@ namespace TurboTurbo
             vol.y = s.buoyancy;
             vol.x = 0f;
             vol.z = 0f;
+            _appliedWind = Vector3.zero;
 
             var em = _ps.emission;
             em.enabled = false;
@@ -249,11 +254,26 @@ namespace TurboTurbo
             heat = Mathf.Clamp01(newHeat);
         }
 
+        /// <summary>Advects the plume with the ambient wind through the world-space velocity offset.</summary>
+        public void ApplyWind()
+        {
+            if (_ps == null) return;
+
+            if (windVelocity == _appliedWind) return;
+            _appliedWind = windVelocity;
+
+            var vol = _ps.velocityOverLifetime;
+            vol.x = windVelocity.x;
+            vol.z = windVelocity.z;
+        }
+
         private void Update()
         {
             var dt = Time.deltaTime;
 
             var s = tuning;
+
+            ApplyWind();
 
             var rate = Mathf.Lerp(s.idleRate, s.fullRate, heat);
             _emitAccumulator += rate * dt;
@@ -268,7 +288,8 @@ namespace TurboTurbo
                 var upSpeed = velocity.Calculate(massFlow, gasDensity);
 
                 // relative wind tears the plume apart with speed: shorter lifetime, more dispersion jitter
-                var speedNorm = Mathf.Clamp01(locoVelocity.magnitude / s.speedNormMax);
+                var airVelocity = locoVelocity - windVelocity;
+                var speedNorm = Mathf.Clamp01(airVelocity.magnitude / s.speedNormMax);
 
                 // custom emit requires us to apply the simulation space manually
                 var simPos = ParticleSimSpace.Position(customSimulationSpace, transform.position)

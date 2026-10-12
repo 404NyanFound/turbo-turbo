@@ -23,6 +23,9 @@ internal sealed class TurboDevPanel : MonoBehaviour
     private bool _texShoulder = SmokeParticles.TexShoulder;
     private float _maxShadowFloor = SmokeParticles.Settings.DefaultMaxShadowFloor;
     private float _forceTempC = 20f;
+    private bool _windOverride;
+    private float _windSpeed = 3f;
+    private float _windDirDegrees;
 
     private TurboTooltipLayer _tooltip;
 
@@ -61,6 +64,8 @@ internal sealed class TurboDevPanel : MonoBehaviour
         DrawDiagnostics();
         GUILayout.Space(6f);
         DrawAmbient();
+        GUILayout.Space(4f);
+        DrawWindOverride();
         GUILayout.Space(6f);
         DrawTelemetry();
         GUILayout.Space(4f);
@@ -195,6 +200,9 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.Label(new GUIContent(
                 $"Ambient: {AmbientTemperature.Celsius:0.0} C   ({AmbientTemperature.Kelvin:0} K)   source: {SourceLabel(AmbientTemperature.Source)}",
                 "Ambient temperature driving intake, gas density and stack cooling."));
+        GUILayout.Label(new GUIContent(
+                $"Wind: {AmbientTemperature.WindSpeed:0.0} m/s   dir {AmbientTemperature.WindDirectionDegrees:0} deg   source: {SourceLabel(AmbientTemperature.WindSource)}",
+                "Ambient wind driving plume drift and dispersion."));
         GUILayout.EndVertical();
     }
 
@@ -202,8 +210,53 @@ internal sealed class TurboDevPanel : MonoBehaviour
     {
         AmbientSource.Seasons => "DV Seasons",
         AmbientSource.Builtin => "builtin",
+        AmbientSource.Game => "game override",
         _ => "reference"
     };
+
+    private void DrawWindOverride()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+
+        var next = GUILayout.Toggle(_windOverride, new GUIContent(
+            "Override wind", "Force the ambient wind instead of reading the weather."));
+        if (next != _windOverride)
+        {
+            _windOverride = next;
+            AmbientTemperature.WindRefreshPaused = next;
+            if (next) ApplyWindOverride();
+        }
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(new GUIContent($"Wind speed: {_windSpeed:0.0} m/s", "Override wind speed."),
+            GUILayout.Width(170f));
+        var speed = GUILayout.HorizontalSlider(_windSpeed, 0f, 15f);
+        GUILayout.EndHorizontal();
+        if (!Mathf.Approximately(speed, _windSpeed))
+        {
+            _windSpeed = speed;
+            if (_windOverride) ApplyWindOverride();
+        }
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(new GUIContent($"Wind direction: {_windDirDegrees:0} deg", "Override wind direction."),
+            GUILayout.Width(170f));
+        var dir = GUILayout.HorizontalSlider(_windDirDegrees, 0f, 360f);
+        GUILayout.EndHorizontal();
+        if (!Mathf.Approximately(dir, _windDirDegrees))
+        {
+            _windDirDegrees = dir;
+            if (_windOverride) ApplyWindOverride();
+        }
+
+        GUILayout.EndVertical();
+    }
+
+    private void ApplyWindOverride()
+    {
+        AmbientTemperature.WindSpeed = _windSpeed;
+        AmbientTemperature.WindDirectionDegrees = _windDirDegrees;
+    }
 
     private void DrawTelemetry()
     {

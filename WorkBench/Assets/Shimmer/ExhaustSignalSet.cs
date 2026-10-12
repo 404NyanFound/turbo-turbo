@@ -20,6 +20,8 @@ namespace TurboTurbo.WorkBench
 
         public Vector3 LocoVelocity;
 
+        public Vector3 Wind;
+
         public void Apply(SmokeParticles smoke, ShimmerParticles shimmer)
         {
             if (smoke != null)
@@ -32,6 +34,7 @@ namespace TurboTurbo.WorkBench
                 smoke.gasDensity = GasDensity;
                 smoke.engineOn = EngineOn;
                 smoke.locoVelocity = LocoVelocity;
+                smoke.windVelocity = Wind;
             }
 
             if (shimmer != null)
@@ -43,6 +46,7 @@ namespace TurboTurbo.WorkBench
                     shimmer.massFlow = MassFlow;
                     shimmer.gasDensity = GasDensity;
                     shimmer.locoVelocity = LocoVelocity;
+                    shimmer.windVelocity = Wind;
                 }
             }
         }

@@ -36,6 +36,9 @@ namespace TurboTurbo.WorkBench
         [Header("Movement speed")]
         [Range(0f, 8f)] public float moveSpeed = 1.5f;
 
+        [Header("Wind (world m/s)")]
+        public Vector3 wind;
+
         private float _lastIdleRate = float.NaN;
         private float _lastFullRate = float.NaN;
 
@@ -138,6 +141,7 @@ namespace TurboTurbo.WorkBench
                 GasDensity = gasDensity,
                 EngineOn = engineOn,
                 LocoVelocity = Vector3.right * moveSpeed,
+                Wind = wind,
             };
             signals.Apply(_smokeBench, _particleEmitter);
 
