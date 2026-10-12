@@ -295,8 +295,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
             MassFlow = CombustionModel.MassFlow,
             GasDensity = CombustionModel.GasDensity,
             EngineOn = engineOn,
-            LocoVelocity = TrainCar.GetVelocity(),
-            AbsSpeed = TrainCar.GetAbsSpeed()
+            LocoVelocity = TrainCar.GetVelocity()
         };
 
         foreach (var e in Exhausts)

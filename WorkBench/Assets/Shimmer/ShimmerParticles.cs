@@ -142,9 +142,6 @@ namespace TurboTurbo
         /// Particles inherit this at emission, then drag decays it.</summary>
         public Vector3 locoVelocity;
 
-        /// <summary>Absolute speed of the vehicle carrying this emitter [m/s].</summary>
-        public float absSpeed;
-
         /// <summary>Per-engine emission and appearance tuning, cloned at bind.</summary>
         public Settings tuning = new Settings();
 
@@ -271,7 +268,7 @@ namespace TurboTurbo
                 var upSpeed = velocity.Calculate(massFlow, gasDensity);
 
                 // relative wind tears the plume apart with speed: shorter lifetime, more dispersion jitter
-                var speedNorm = Mathf.Clamp01(absSpeed / s.speedNormMax);
+                var speedNorm = Mathf.Clamp01(locoVelocity.magnitude / s.speedNormMax);
 
                 // custom emit requires us to apply the simulation space manually
                 var simPos = ParticleSimSpace.Position(customSimulationSpace, transform.position)

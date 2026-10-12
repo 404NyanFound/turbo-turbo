@@ -148,9 +148,6 @@ namespace TurboTurbo.WorkBench
 
         public Vector3 locoVelocity;
 
-        /// <summary>Absolute speed of the vehicle carrying this emitter [m/s].</summary>
-        public float absSpeed;
-
         /// <summary>Per-engine emission and appearance tuning, cloned at bind.</summary>
         public Settings tuning = new Settings();
 
@@ -354,8 +351,8 @@ namespace TurboTurbo.WorkBench
 
             var s = tuning;
 
-            // smoke dispersion and turbulence scales with this
-            var speedNorm = Mathf.Clamp01(absSpeed / s.speedNormMax);
+            // smoke dispersion and turbulence scale with airspeed
+            var speedNorm = Mathf.Clamp01(locoVelocity.magnitude / s.speedNormMax);
 
             var noise = _ps.noise;
             noise.strength = Mathf.Lerp(s.turbulenceStrengthMin, s.turbulenceStrengthMax, speedNorm);

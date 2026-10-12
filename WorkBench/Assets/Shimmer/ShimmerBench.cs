@@ -138,7 +138,6 @@ namespace TurboTurbo.WorkBench
                 GasDensity = gasDensity,
                 EngineOn = engineOn,
                 LocoVelocity = Vector3.right * moveSpeed,
-                AbsSpeed = moveSpeed,
             };
             signals.Apply(_smokeBench, _particleEmitter);
 
