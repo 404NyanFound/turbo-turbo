@@ -129,9 +129,6 @@ public sealed class StackModel
         ExhaustWallTempK = Mathf.Max(1f, ambientK);
     }
 
-    /// <summary>Fills the stack immediately (editor test button).</summary>
-    public void Fill() => WetStack = 1f;
-
     /// <summary>
     /// Advances the simulation by <paramref name="delta"/> seconds.
     /// </summary>
@@ -172,4 +169,10 @@ public sealed class StackModel
         var slipNorm = slip / Mathf.Max(1e-4f, s.ReferenceUnburned);
         Vapour = slipNorm + (WetStack * hotness);
     }
+
+    /// <summary>Fills the stack immediately.</summary>
+    public void Fill() => WetStack = 1f;
+
+    /// <summary>Instantly sets the wall to the given temperature.</summary>
+    public void SetTemperatureK(float kelvin) => ExhaustWallTempK = Mathf.Max(1f, kelvin);
 }

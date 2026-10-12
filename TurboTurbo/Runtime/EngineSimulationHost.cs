@@ -119,6 +119,14 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         }
     }
 
+    /// <summary>Sets all engine component temperatures to the given value.</summary>
+    public void SetTemperaturesK(float kelvin)
+    {
+        if (!Bound) return;
+        CombustionModel.SetTemperatureK(kelvin);
+        Stack.SetTemperatureK(kelvin);
+    }
+
     private void TryBindSimulation()
     {
         _simController = GetComponent<SimController>();

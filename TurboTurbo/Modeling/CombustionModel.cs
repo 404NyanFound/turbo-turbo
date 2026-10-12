@@ -306,6 +306,14 @@ public sealed class CombustionModel
         SurgeThisTick = Charger.Surging;
     }
 
+    /// <summary>Instantly sets the block and cylinder walls to the given temperature.</summary>
+    public void SetTemperatureK(float kelvin)
+    {
+        var k = Mathf.Max(1f, kelvin);
+        CylinderTempK = k;
+        EngineTempK = k;
+    }
+
     private float IntakeTemperature(float ambientK, float blockK, float charge, float flowNorm)
     {
         var s = Tuning;

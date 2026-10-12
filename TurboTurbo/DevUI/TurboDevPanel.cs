@@ -19,6 +19,7 @@ internal sealed class TurboDevPanel : MonoBehaviour
     private float _densityFalloff = SmokeParticles.DensityFalloff;
     private float _softParticlesFade = SmokeParticles.SoftParticlesFade;
     private float _fadeInSeconds = SmokeParticles.FadeInSeconds;
+    private float _forceTempC = 20f;
 
     private TurboTooltipLayer _tooltip;
 
@@ -59,6 +60,8 @@ internal sealed class TurboDevPanel : MonoBehaviour
         DrawAmbient();
         GUILayout.Space(6f);
         DrawTelemetry();
+        GUILayout.Space(4f);
+        DrawForceTemperature();
         GUILayout.Space(4f);
         DrawDensityFalloff();
         GUILayout.Space(4f);
@@ -240,6 +243,28 @@ internal sealed class TurboDevPanel : MonoBehaviour
         }
 
         GUILayout.EndVertical();
+    }
+
+    private void DrawForceTemperature()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(new GUIContent($"Force temperature: {_forceTempC:0} C",
+                "Teleports the engine block, cylinder and stack wall to this temperature."),
+            GUILayout.Width(170f));
+        _forceTempC = GUILayout.HorizontalSlider(_forceTempC, -20f, 80f);
+        GUILayout.EndHorizontal();
+        if (GUILayout.Button("apply to current loco"))
+        {
+            ApplyForceTemperature();
+        }
+        GUILayout.EndVertical();
+    }
+
+    private void ApplyForceTemperature()
+    {
+        var host = CurrentHost();
+        host?.SetTemperaturesK(PhysicsConstants.KelvinOffset + _forceTempC);
     }
 
     private void DrawDensityFalloff()
