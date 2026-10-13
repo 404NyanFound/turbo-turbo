@@ -52,9 +52,8 @@ internal static class PlayerTrainInspector
         {
             var main = ps.main;
             var renderer = ps.GetComponent<ParticleSystemRenderer>();
-            var texture = renderer != null && renderer.sharedMaterial != null
-                ? renderer.sharedMaterial.mainTexture
-                : null;
+            var material = renderer != null ? renderer.sharedMaterial : null;
+            var texture = material != null && material.HasProperty("_MainTex") ? material.mainTexture : null;
             sb.AppendLine($"- {ps.name} path={HierarchyPath(car.transform, ps.transform)} " +
                 $"localPos={ps.transform.localPosition} localRot={ps.transform.localEulerAngles} " +
                 $"emission={ps.emission.enabled} texture={(texture != null ? texture.name : "none")} " +
@@ -89,7 +88,7 @@ internal static class PlayerTrainInspector
     private static void DumpLivery(StringBuilder sb, TrainCarLivery livery)
     {
         var parent = livery.parentType;
-        
+
         sb.AppendLine($"livery: id={livery.id} parent={(parent != null ? parent.id : "?")} " +
             $"v1={livery.v1} modded={!Enum.IsDefined(typeof(TrainCarType), livery.v1)} " +
             $"loco={(parent != null && CarTypes.IsLocomotive(livery))} hidden={livery.isHidden} " +

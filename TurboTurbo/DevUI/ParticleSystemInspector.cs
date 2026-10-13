@@ -161,11 +161,12 @@ internal static class ParticleSystemInspector
             var mat = rend.sharedMaterial;
             if (mat != null)
             {
-                var tex = mat.mainTexture;
+                var hasTex = mat.HasProperty("_MainTex");
+                var tex = hasTex ? mat.mainTexture : null;
+                var texText = !hasTex ? "n/a" : tex != null ? $"{tex.name} ({tex.width}x{tex.height})" : "none";
                 sb.AppendLine($"{pad}  renderer.material: '{mat.name}' shader='{mat.shader?.name}' " +
-                              $"tex='{(tex != null ? tex.name : "NULL")}' " +
-                              $"({(tex != null ? $"{tex.width}x{tex.height}" : "0x0")}) queue={mat.renderQueue}");
-                sb.AppendLine($"{pad}  renderer._Color={mat.color}");
+                              $"tex={texText} queue={mat.renderQueue}");
+                sb.AppendLine($"{pad}  renderer._Color={(mat.HasProperty("_Color") ? mat.color.ToString() : "n/a")}");
             }
             else
             {
