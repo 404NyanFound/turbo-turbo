@@ -18,7 +18,8 @@ Shader "TurboTurbo/Smoke"
     }
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
+        // draw just after the shimmer effect so the shimmer doesn't distort the smoke
+        Tags { "Queue"="Transparent+125" "RenderType"="Transparent" "IgnoreProjector"="True" }
 
         Pass
         {
