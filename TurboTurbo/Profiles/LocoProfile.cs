@@ -131,6 +131,7 @@ public sealed class LocoProfile
         {
             TurboCharger ??= new TurboCharger.Settings();
             Atmospheric = null;
+            TurboCharger.Validate();
         }
 
         return null;

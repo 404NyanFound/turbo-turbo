@@ -331,10 +331,10 @@ namespace TurboTurboTests
             defaultXml.ShouldNotContain("ExhaustVelocityCoefficient");
             defaultXml.ShouldContain("<Combustion");
             defaultXml.ShouldNotContain("RatedExhaustTempK");
-            defaultXml.ShouldNotContain("TauCylinder");
+            defaultXml.ShouldNotContain("TauChamber");
             defaultXml.ShouldNotContain("TauCooldownOpen");
             defaultXml.ShouldNotContain("TauCooldownClosed");
-            defaultXml.ShouldNotContain("MinBurnFractionAtCold");
+            defaultXml.ShouldNotContain("IgnitionTempK");
 
             var tuned = ValidProfile("sparse");
             tuned.Velocity = new ExhaustVelocitySettings { ExhaustVelocityCoefficient = 2.5f };
@@ -476,10 +476,10 @@ namespace TurboTurboTests
             profile.Combustion = new CombustionModel.Settings
             {
                 RatedExhaustTempK = 800f,
-                TauCylinder = 9f,
+                TauChamber = 9f,
                 TauCooldownOpen = 420f,
                 TauCooldownClosed = 3600f,
-                ResidualGasFraction = 0.06f,
+                IgnitionSpread = 0.8f,
             };
             profile.Stack = new StackModel.Settings { FillTime = 75f, ClearTime = 45f, StickMax = 0.6f };
 
@@ -499,10 +499,10 @@ namespace TurboTurboTests
             restored.ShimmerEmitter.yOffset.ShouldBe(0.3f);
             restored.Velocity.ExhaustVelocityCoefficient.ShouldBe(3.25f);
             restored.Combustion.RatedExhaustTempK.ShouldBe(800f);
-            restored.Combustion.TauCylinder.ShouldBe(9f);
+            restored.Combustion.TauChamber.ShouldBe(9f);
             restored.Combustion.TauCooldownOpen.ShouldBe(420f);
             restored.Combustion.TauCooldownClosed.ShouldBe(3600f);
-            restored.Combustion.ResidualGasFraction.ShouldBe(0.06f);
+            restored.Combustion.IgnitionSpread.ShouldBe(0.8f);
             restored.Stack.FillTime.ShouldBe(75f);
             restored.Stack.ClearTime.ShouldBe(45f);
             restored.Stack.StickMax.ShouldBe(0.6f);

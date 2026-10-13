@@ -5,26 +5,23 @@ namespace TurboTurbo.Profiles.Storage.V1;
 public sealed class CombustionXml
 {
     internal const float DefaultRatedExhaustTempK = 760f;
-    internal const float DefaultTauCylinder = 10f;
-    internal const float DefaultTauEngine = 80f;
+    internal const float DefaultTauChamber = 25f;
+    internal const float DefaultTauEngine = 400f;
     internal const float DefaultTauCooldownOpen = 65f;
     internal const float DefaultTauCooldownClosed = 1300f;
-    internal const float DefaultCylinderGainK = 60f;
-    internal const float DefaultPolytropicExponent = 1.35f;
-    internal const float DefaultCompressorEfficiency = 0.75f;
-    internal const float DefaultCompressionHeatLoss = 0.15f;
-    internal const float DefaultInductionWallHeating = 0.15f;
-    internal const float DefaultResidualGasFraction = 0.04f;
-    internal const float DefaultColdCompressionK = 620f;
-    internal const float DefaultWarmCompressionK = 760f;
-    internal const float DefaultMinBurnFractionAtCold = 0.85f;
+    internal const float DefaultChamberGainK = 220f;
+    internal const float DefaultPolytropicExponent = 1.34f;
+    internal const float DefaultIgnitionTempK = 540f;
+    internal const float DefaultIgnitionSpread = 1.5f;
+    internal const float DefaultLateBurnWork = 0.5f;
+    internal const float DefaultQuenchFraction = 0.15f;
     internal const float DefaultCrankingFuelPerStroke = 0.25f;
 
     [DefaultValue(DefaultRatedExhaustTempK)]
     public float RatedExhaustTempK { get; set; } = DefaultRatedExhaustTempK;
 
-    [DefaultValue(DefaultTauCylinder)]
-    public float TauCylinder { get; set; } = DefaultTauCylinder;
+    [DefaultValue(DefaultTauChamber)]
+    public float TauChamber { get; set; } = DefaultTauChamber;
 
     [DefaultValue(DefaultTauEngine)]
     public float TauEngine { get; set; } = DefaultTauEngine;
@@ -35,32 +32,23 @@ public sealed class CombustionXml
     [DefaultValue(DefaultTauCooldownClosed)]
     public float TauCooldownClosed { get; set; } = DefaultTauCooldownClosed;
 
-    [DefaultValue(DefaultCylinderGainK)]
-    public float CylinderGainK { get; set; } = DefaultCylinderGainK;
+    [DefaultValue(DefaultChamberGainK)]
+    public float ChamberGainK { get; set; } = DefaultChamberGainK;
 
     [DefaultValue(DefaultPolytropicExponent)]
     public float PolytropicExponent { get; set; } = DefaultPolytropicExponent;
 
-    [DefaultValue(DefaultCompressorEfficiency)]
-    public float CompressorEfficiency { get; set; } = DefaultCompressorEfficiency;
+    [DefaultValue(DefaultIgnitionTempK)]
+    public float IgnitionTempK { get; set; } = DefaultIgnitionTempK;
 
-    [DefaultValue(DefaultCompressionHeatLoss)]
-    public float CompressionHeatLoss { get; set; } = DefaultCompressionHeatLoss;
+    [DefaultValue(DefaultIgnitionSpread)]
+    public float IgnitionSpread { get; set; } = DefaultIgnitionSpread;
 
-    [DefaultValue(DefaultInductionWallHeating)]
-    public float InductionWallHeating { get; set; } = DefaultInductionWallHeating;
+    [DefaultValue(DefaultLateBurnWork)]
+    public float LateBurnWork { get; set; } = DefaultLateBurnWork;
 
-    [DefaultValue(DefaultResidualGasFraction)]
-    public float ResidualGasFraction { get; set; } = DefaultResidualGasFraction;
-
-    [DefaultValue(DefaultColdCompressionK)]
-    public float ColdCompressionK { get; set; } = DefaultColdCompressionK;
-
-    [DefaultValue(DefaultWarmCompressionK)]
-    public float WarmCompressionK { get; set; } = DefaultWarmCompressionK;
-
-    [DefaultValue(DefaultMinBurnFractionAtCold)]
-    public float MinBurnFractionAtCold { get; set; } = DefaultMinBurnFractionAtCold;
+    [DefaultValue(DefaultQuenchFraction)]
+    public float QuenchFraction { get; set; } = DefaultQuenchFraction;
 
     [DefaultValue(DefaultCrankingFuelPerStroke)]
     public float CrankingFuelPerStroke { get; set; } = DefaultCrankingFuelPerStroke;

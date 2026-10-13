@@ -100,11 +100,11 @@ namespace TurboTurboTests
         public void TurboCharger_DefaultCompression_And_IntakeNtu_AreTurboValues()
         {
             var settings = new TurboCharger.Settings();
-            settings.CompressionRatio.ShouldBe(16f);
+            settings.CompressionRatio.ShouldBe(13f);
             settings.IntakeNtu.ShouldBe(1f);
 
             var charger = new TurboCharger(settings);
-            charger.CompressionRatio.ShouldBe(16f);
+            charger.CompressionRatio.ShouldBe(13f);
             charger.IntakeNtu.ShouldBe(1f);
         }
 
@@ -112,11 +112,11 @@ namespace TurboTurboTests
         public void AtmosphericCharger_DefaultCompression_And_IntakeNtu_AreAspiratedValues()
         {
             var settings = new AtmosphericCharger.Settings();
-            settings.CompressionRatio.ShouldBe(18f);
+            settings.CompressionRatio.ShouldBe(16f);
             settings.IntakeNtu.ShouldBe(0.15f);
 
             var charger = new AtmosphericCharger(settings);
-            charger.CompressionRatio.ShouldBe(18f);
+            charger.CompressionRatio.ShouldBe(16f);
             charger.IntakeNtu.ShouldBe(0.15f);
         }
 
@@ -135,7 +135,9 @@ namespace TurboTurboTests
         public void CombustionModel_WithAtmosphericCharger_Lambda_UsesAspiratedCalibration()
         {
             var model = new CombustionModel(() => 1f, () => 1f, () => 1f, () => PhysicsConstants.ReferenceAmbientK,
-                new AtmosphericCharger(new AtmosphericCharger.Settings()), new CombustionModel.Settings(),
+                new AtmosphericCharger(new AtmosphericCharger.Settings()),
+                // ignites everything, so a cold engine doesn't skew the air consumption
+                new CombustionModel.Settings { IgnitionTempK = 1f },
                 new ExhaustVelocitySettings());
             // arrange: settle the charger
             model.Tick(0.016f, engineOn: true);

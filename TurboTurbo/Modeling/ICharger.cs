@@ -17,10 +17,15 @@ public interface ICharger
     /// </summary>
     float ChargeAtFullPower { get; }
 
-    /// <summary>Volume compression ratio of the cylinders.</summary>
+    /// <summary>
+    /// Effective compression ratio of the cylinders, counted from the moment the intake closes.
+    /// </summary>
     float CompressionRatio { get; }
 
-    /// <summary>Manifold/aftercooler heat-transfer effectiveness at rated flow.</summary>
+    /// <summary>
+    /// NTU of the intake manifold/aftercooler at rated flow. Determines how strongly the intake air is
+    /// pulled towards the block temperature.
+    /// </summary>
     float IntakeNtu { get; }
 
     float Boost { get; }

@@ -1,5 +1,6 @@
 using TurboTurbo.Assets;
 using TurboTurbo.Configuration;
+using TurboTurbo.Modeling;
 using TurboTurbo.Runtime;
 using TurboTurbo.Runtime.Environment;
 using TurboTurbo.WorkBench;
@@ -23,6 +24,7 @@ internal sealed class TurboDevPanel : MonoBehaviour
     private bool _texShoulder = SmokeParticles.TexShoulder;
     private float _maxShadowFloor = SmokeParticles.Settings.DefaultMaxShadowFloor;
     private float _forceTempC = 20f;
+    private float _minExhaustVelocity = ExhaustVelocitySettings.MinExhaustVelocity;
     private bool _windOverride;
     private float _windSpeed = 3f;
     private float _windDirDegrees;
@@ -70,6 +72,8 @@ internal sealed class TurboDevPanel : MonoBehaviour
         DrawTelemetry();
         GUILayout.Space(4f);
         DrawForceTemperature();
+        GUILayout.Space(4f);
+        DrawMinExhaustVelocity();
         GUILayout.Space(4f);
         DrawDensityFalloff();
         GUILayout.Space(4f);
@@ -284,10 +288,14 @@ internal sealed class TurboDevPanel : MonoBehaviour
                         $"(dt) {m.TurbineTemperatureDropK:0.0}   " +
                         $"(exh) {m.GasTemperature - PhysicsConstants.KelvinOffset:0.0} C");
         GUILayout.Label($"intake {m.IntakeTempK - PhysicsConstants.KelvinOffset:0.0} C   " +
-                        $"compression {m.CompressionTempK - PhysicsConstants.KelvinOffset:0.0} C");
+                        $"compression {m.CompressionTempK - PhysicsConstants.KelvinOffset:0.0} C   " +
+                        $"n {m.CompressionExponent:0.000}");
         GUILayout.Label($"gasDensity {m.GasDensity:0.000}");
         GUILayout.Label($"burn air {m.BurnFractionAir:0.000}   burn temp {m.BurnFractionTemp:0.000}   burn {m.BurnFraction:0.000}");
-        GUILayout.Label($"cylTemp {m.CylinderTempK - PhysicsConstants.KelvinOffset:0.0} C   blockTemp {m.EngineTempK - PhysicsConstants.KelvinOffset:0.0} C   thermostat {m.ThermostatOpen:0.00}");
+        GUILayout.Label($"p_c {m.CompressionPressure:0.0} bar   ignition margin {m.IgnitionMargin:0.00}   " +
+                        $"injected/stroke {m.InjectedPerStroke:0.000}   work eff {m.WorkEfficiency:0.000}   " +
+                        $"late {m.LateBurnedFuel:0.0000}   unburned {m.UnburnedFuel:0.0000}");
+        GUILayout.Label($"cylTemp {m.ChamberTempK - PhysicsConstants.KelvinOffset:0.0} C   blockTemp {m.EngineTempK - PhysicsConstants.KelvinOffset:0.0} C   thermostat {m.ThermostatOpen:0.00}");
         GUILayout.Label($"exhaustVelocity {m.ExhaustVelocity:0.00} m/s");
         GUILayout.Label($"absSpeed {host.AbsSpeed:0.0} m/s ({host.AbsSpeed * PhysicsConstants.MpsToKmh:0.0} km/h)");
 
@@ -312,7 +320,7 @@ internal sealed class TurboDevPanel : MonoBehaviour
         GUILayout.BeginVertical(GUI.skin.box);
         GUILayout.BeginHorizontal();
         GUILayout.Label(new GUIContent($"Force temperature: {_forceTempC:0} C",
-                "Sets the engine block, cylinder and stack wall to this temperature."),
+                "Sets the engine block, combustion chamber and stack wall to this temperature."),
             GUILayout.Width(170f));
         _forceTempC = GUILayout.HorizontalSlider(_forceTempC, -20f, 80f);
         GUILayout.EndHorizontal();
@@ -327,6 +335,23 @@ internal sealed class TurboDevPanel : MonoBehaviour
     {
         var host = CurrentHost();
         host?.SetTemperaturesK(PhysicsConstants.KelvinOffset + _forceTempC);
+    }
+
+    private void DrawMinExhaustVelocity()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(new GUIContent($"Min exhaust velocity: {_minExhaustVelocity:0.0} m/s",
+                "Floor on the calculated exhaust plume speed. Dev-only."),
+            GUILayout.Width(170f));
+        var next = GUILayout.HorizontalSlider(_minExhaustVelocity, 0f, 10f);
+        GUILayout.EndHorizontal();
+        if (!Mathf.Approximately(next, _minExhaustVelocity))
+        {
+            _minExhaustVelocity = next;
+            ExhaustVelocitySettings.MinExhaustVelocity = next;
+        }
+        GUILayout.EndVertical();
     }
 
     private void DrawDensityFalloff()

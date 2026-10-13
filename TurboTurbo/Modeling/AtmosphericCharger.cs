@@ -19,7 +19,7 @@ public sealed class AtmosphericCharger : ICharger
         internal const float DefaultChokeK = 0.25f;
         internal const float DefaultChokeBeta = 2f;
         internal const float DefaultLambdaCalibration = 0.49f;
-        internal const float DefaultCompressionRatio = 18f;
+        internal const float DefaultCompressionRatio = 16f;
         internal const float DefaultIntakeNtu = 0.15f;
 
         public float EtaPeak { get; set; } = DefaultEtaPeak;
@@ -55,6 +55,7 @@ public sealed class AtmosphericCharger : ICharger
         public void Validate()
         {
             EtaPeak = Mathf.Max(0.01f, EtaPeak);
+            LambdaCalibration = Mathf.Max(0.01f, LambdaCalibration);
             ChokeK = Mathf.Clamp01(ChokeK);
             ChokeBeta = Mathf.Max(0f, ChokeBeta);
             CompressionRatio = Mathf.Max(1.01f, CompressionRatio);

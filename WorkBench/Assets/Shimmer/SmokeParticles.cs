@@ -172,7 +172,7 @@ namespace TurboTurbo.WorkBench
 
         public int ParticleCount => _ps.particleCount;
 
-        /// <summary>The internal appearance model (dev panel edits its settings).</summary>
+        /// <summary>The appearance model that turns the engine signals into smoke colour and opacity.</summary>
         internal ExhaustSmokeModel Model { get; } = new ExhaustSmokeModel();
 
         private void OnValidate()

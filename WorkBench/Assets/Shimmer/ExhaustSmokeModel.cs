@@ -37,7 +37,7 @@ namespace TurboTurbo.Modeling
             internal const float DefaultSootMaxAlpha = 0.95f;
             internal const float DefaultSootPowerFloor = 0.1f;
             internal const float DefaultSootPowerExponent = 1f;
-            internal const float DefaultWetStackMaxAlpha = 0.2f;
+            internal const float DefaultWetStackMaxAlpha = 0.4f;
             internal const float DefaultOilTintStrength = 0.3f;
             internal const float DefaultOilRpmExponent = 2.5f;
 
@@ -138,7 +138,6 @@ namespace TurboTurbo.Modeling
 
         /// <summary>
         /// Total particulate mass produced per unit time (sum of all exhaust fractions).
-        /// The shader uses this to decide how much smoke to render.
         /// </summary>
         public float ParticulateMass { get; private set; }
 
@@ -234,6 +233,10 @@ namespace TurboTurbo.Modeling
     public sealed class ExhaustVelocitySettings
     {
         internal const float DefaultExhaustVelocityCoefficient = 5f;
+        internal const float DefaultMinExhaustVelocity = 1f;
+
+        /// <summary>Lower bound [m/s] applied to the calculated exhaust plume speed.</summary>
+        public static float MinExhaustVelocity = DefaultMinExhaustVelocity;
 
         /// <summary>
         /// Exhaust velocity coefficient [m/s per unit mass flow per unit gas density].
@@ -255,10 +258,11 @@ namespace TurboTurbo.Modeling
             ExhaustVelocityCoefficient = Mathf.Max(0.01f, ExhaustVelocityCoefficient);
         }
 
-        /// <summary>Exhaust plume speed [m/s] from the current mass flow and gas density.</summary>
+        /// <summary>Exhaust plume speed [m/s] from the current mass flow and gas density, floored at <see cref="MinExhaustVelocity"/>.</summary>
         public float Calculate(float massFlow, float gasDensity)
         {
-            return ExhaustVelocityCoefficient * massFlow / Mathf.Max(0.0001f, gasDensity);
+            var speed = ExhaustVelocityCoefficient * massFlow / Mathf.Max(0.0001f, gasDensity);
+            return Mathf.Max(MinExhaustVelocity, speed);
         }
     }
 

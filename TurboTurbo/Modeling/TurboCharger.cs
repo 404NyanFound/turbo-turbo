@@ -18,7 +18,7 @@ public sealed class TurboCharger : ICharger
         internal const float DefaultMinSpoolTau = 0.5f;
         internal const float DefaultThermalK = 0.8f;
         internal const float DefaultSurgeRateThreshold = 15f;
-        internal const float DefaultCompressionRatio = 16f;
+        internal const float DefaultCompressionRatio = 13f;
         internal const float DefaultIntakeNtu = 1f;
 
         public float LambdaCalibration { get; set; } = DefaultLambdaCalibration;
@@ -55,6 +55,19 @@ public sealed class TurboCharger : ICharger
             SurgeRateThreshold = other.SurgeRateThreshold;
             CompressionRatio = other.CompressionRatio;
             IntakeNtu = other.IntakeNtu;
+        }
+
+        public void Validate()
+        {
+            LambdaCalibration = Mathf.Max(0.01f, LambdaCalibration);
+            BoostChargeMultiplier = Mathf.Max(0f, BoostChargeMultiplier);
+            TauUp = Mathf.Max(0.01f, TauUp);
+            TauDown = Mathf.Max(0.01f, TauDown);
+            MinSpoolTau = Mathf.Max(0.01f, MinSpoolTau);
+            ThermalK = Mathf.Max(0f, ThermalK);
+            SurgeRateThreshold = Mathf.Max(0f, SurgeRateThreshold);
+            CompressionRatio = Mathf.Max(1.01f, CompressionRatio);
+            IntakeNtu = Mathf.Max(0f, IntakeNtu);
         }
     }
 

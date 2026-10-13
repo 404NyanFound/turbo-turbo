@@ -276,19 +276,16 @@ internal static class ProfileMapper
             : new CombustionModel.Settings
             {
                 RatedExhaustTempK = xml.RatedExhaustTempK,
-                TauCylinder = xml.TauCylinder,
+                TauChamber = xml.TauChamber,
                 TauEngine = xml.TauEngine,
                 TauCooldownOpen = xml.TauCooldownOpen,
                 TauCooldownClosed = xml.TauCooldownClosed,
-                CylinderGainK = xml.CylinderGainK,
+                ChamberGainK = xml.ChamberGainK,
                 PolytropicExponent = xml.PolytropicExponent,
-                CompressorEfficiency = xml.CompressorEfficiency,
-                CompressionHeatLoss = xml.CompressionHeatLoss,
-                InductionWallHeating = xml.InductionWallHeating,
-                ResidualGasFraction = xml.ResidualGasFraction,
-                ColdCompressionK = xml.ColdCompressionK,
-                WarmCompressionK = xml.WarmCompressionK,
-                MinBurnFractionAtCold = xml.MinBurnFractionAtCold,
+                IgnitionTempK = xml.IgnitionTempK,
+                IgnitionSpread = xml.IgnitionSpread,
+                LateBurnWork = xml.LateBurnWork,
+                QuenchFraction = xml.QuenchFraction,
                 CrankingFuelPerStroke = xml.CrankingFuelPerStroke,
             };
 
@@ -298,19 +295,16 @@ internal static class ProfileMapper
             : new CombustionXml
             {
                 RatedExhaustTempK = settings.RatedExhaustTempK,
-                TauCylinder = settings.TauCylinder,
+                TauChamber = settings.TauChamber,
                 TauEngine = settings.TauEngine,
                 TauCooldownOpen = settings.TauCooldownOpen,
                 TauCooldownClosed = settings.TauCooldownClosed,
-                CylinderGainK = settings.CylinderGainK,
+                ChamberGainK = settings.ChamberGainK,
                 PolytropicExponent = settings.PolytropicExponent,
-                CompressorEfficiency = settings.CompressorEfficiency,
-                CompressionHeatLoss = settings.CompressionHeatLoss,
-                InductionWallHeating = settings.InductionWallHeating,
-                ResidualGasFraction = settings.ResidualGasFraction,
-                ColdCompressionK = settings.ColdCompressionK,
-                WarmCompressionK = settings.WarmCompressionK,
-                MinBurnFractionAtCold = settings.MinBurnFractionAtCold,
+                IgnitionTempK = settings.IgnitionTempK,
+                IgnitionSpread = settings.IgnitionSpread,
+                LateBurnWork = settings.LateBurnWork,
+                QuenchFraction = settings.QuenchFraction,
                 CrankingFuelPerStroke = settings.CrankingFuelPerStroke,
             };
 

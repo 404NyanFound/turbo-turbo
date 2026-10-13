@@ -15,9 +15,9 @@ internal static class ChargerSection
         "As a starting guideline, bring the engine to full load, then adjust the calibration so that lambda remains just above 1.3.";
 
     private const string CompressionRatioToolTip =
-        "Volume compression ratio of the cylinders.\n" +
-        "Higher values result in more compression. Naturally aspirated engines " +
-        "typically sit near 18, turbocharged engines somewhat lower.";
+        "Effective compression ratio of the cylinders, counted from the moment the intake closes.\n" +
+        "Higher values result in hotter compression. Naturally aspirated engines " +
+        "typically sit near 16, turbocharged engines somewhat lower.";
 
     private const string IntakeNtuToolTip =
         "Intake manifold heat transfer effectiveness at rated flow.\n" +

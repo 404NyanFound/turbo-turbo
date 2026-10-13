@@ -18,8 +18,7 @@ namespace TurboTurboTests
         // used for tests that don't consider the thermal model
         private readonly CombustionModel.Settings _perfectCompression = new CombustionModel.Settings
         {
-            ColdCompressionK = 0f,
-            WarmCompressionK = 1f,
+            IgnitionTempK = 1f,
         };
 
         private readonly ExhaustVelocitySettings _velocitySettings = new ExhaustVelocitySettings();
@@ -245,10 +244,10 @@ namespace TurboTurboTests
             clone.RatedExhaustTempK.ShouldBe(template.RatedExhaustTempK);
             clone.RatedExhaustTempK = 123f;
             template.RatedExhaustTempK.ShouldNotBe(123f);
-            clone.TauCylinder.ShouldBe(template.TauCylinder);
-            clone.CylinderGainK += 10f;
-            template.CylinderGainK.ShouldNotBe(clone.CylinderGainK);
-            clone.WarmCompressionK.ShouldBe(template.WarmCompressionK);
+            clone.TauChamber.ShouldBe(template.TauChamber);
+            clone.ChamberGainK += 10f;
+            template.ChamberGainK.ShouldNotBe(clone.ChamberGainK);
+            clone.IgnitionTempK.ShouldBe(template.IgnitionTempK);
         }
 
         [Fact]
@@ -325,7 +324,7 @@ namespace TurboTurboTests
         }
 
         [Fact]
-        public void TurbineDrop_AtFullPower_MatchesIsentropicExpansion()
+        public void TurbineDrop_AtFullPower_MatchesTurbineExpansion()
         {
             var model = CreateModel();
             _fuelNorm = 1f;
@@ -335,8 +334,9 @@ namespace TurboTurboTests
                 model.Tick(0.1f, engineOn: true);
             }
 
-            // manifold 760 K expanded across the charge pressure ratio, gamma = 1.4 -> exponent 0.2857
-            var expectedDrop = CombustionModel.Settings.DefaultRatedExhaustTempK *
+            // manifold 760 K expanded across the charge pressure ratio, gamma = 1.4 -> exponent 0.2857,
+            // by a turbine that extracts 78% of the isentropic drop
+            var expectedDrop = CombustionModel.Settings.DefaultRatedExhaustTempK * 0.78f *
                                (1f - (float)Math.Pow(model.Charger.ChargeAtFullPower, -0.28571));
             model.TurbineTemperatureDropK.ShouldBe(expectedDrop, tolerance: 0.5f);
         }
@@ -383,38 +383,116 @@ namespace TurboTurboTests
         // ------------------------------------------------------------
 
         [Fact]
-        public void Thermal_ColdStart_HoldsBurnFractionAtFloor()
+        public void Ignition_FarTooCold_NothingIgnites()
         {
-            var cold = new CombustionModel.Settings
-            {
-                ColdCompressionK = 2000f,
-                WarmCompressionK = 2100f,
-            };
-            var model = CreateModel(cold);
-            _fuelNorm = 1f;
-            _rpmNorm = 1f;
+            var model = CreateModel(new CombustionModel.Settings { IgnitionTempK = 2000f });
+            _fuelNorm = 0.03f;
+            _rpmNorm = 0.3f;
             model.Tick(0.016f, engineOn: true);
 
-            model.CompressionTempK.ShouldBeLessThan(cold.ColdCompressionK);
-            model.CylinderTempK.ShouldBe(PhysicsConstants.ReferenceAmbientK, tolerance: 0.1f);
-            model.EngineTempK.ShouldBe(PhysicsConstants.ReferenceAmbientK, tolerance: 0.1f);
-            model.BurnFractionTemp.ShouldBe(cold.MinBurnFractionAtCold, tolerance: 0.001f);
-            model.BurnFraction.ShouldBe(model.BurnFractionAir * cold.MinBurnFractionAtCold, tolerance: 0.001f);
+            model.BurnFractionTemp.ShouldBe(0f);
+            model.BurnFraction.ShouldBe(0f);
         }
 
         [Fact]
-        public void Thermal_ColdEngine_ProducesLessExhaustEnergyThanWarm()
+        public void Ignition_WarmEngine_BurnsEverything()
         {
-            _fuelNorm = 1f;
-            _rpmNorm = 1f;
+            var model = CreateModel(new CombustionModel.Settings());
+            model.SetTemperatureK(CombustionModel.Settings.ThermostatFullOpenK);
+            _fuelNorm = 0.03f;
+            _rpmNorm = 0.3f;
+            model.Tick(0.016f, engineOn: true);
 
+            model.BurnFractionTemp.ShouldBe(1f);
+            model.UnburnedFuel.ShouldBe(0f);
+            model.InjectedPerStroke.ShouldBe(model.FuelPerStroke, tolerance: 1e-5f);
+        }
+
+        [Fact]
+        public void Ignition_HotterCompression_WidensMargin()
+        {
             var cold = CreateModel(new CombustionModel.Settings());
+            var warm = CreateModel(new CombustionModel.Settings());
+            warm.SetTemperatureK(CombustionModel.Settings.ThermostatFullOpenK);
+            _fuelNorm = 0.03f;
+            _rpmNorm = 0.3f;
+            cold.Tick(0.016f, engineOn: true);
+            warm.Tick(0.016f, engineOn: true);
+
+            warm.CompressionTempK.ShouldBeGreaterThan(cold.CompressionTempK);
+            warm.IgnitionMargin.ShouldBeGreaterThan(cold.IgnitionMargin);
+        }
+
+        [Fact]
+        public void Governor_Misfiring_InjectsExtraFuelToMeetDemand()
+        {
+            var settings = new CombustionModel.Settings { IgnitionTempK = 600f };
+            var model = CreateModel(settings);
+            _fuelNorm = 0.03f;
+            _rpmNorm = 0.3f;
+            model.Tick(0.016f, engineOn: true);
+
+            model.BurnFractionTemp.ShouldBeInRange(0.15f, 0.95f);
+            // the extra fuel makes up exactly for the work lost to late burning
+            (model.InjectedPerStroke * model.WorkEfficiency).ShouldBe(model.FuelPerStroke, tolerance: 1e-4f);
+            var missed = model.InjectedPerStroke * (1f - model.BurnFractionTemp) * _rpmNorm;
+            model.UnburnedFuel.ShouldBe(missed * settings.QuenchFraction, tolerance: 1e-5f);
+            model.LateBurnedFuel.ShouldBe(missed * (1f - settings.QuenchFraction), tolerance: 1e-5f);
+        }
+
+        [Fact]
+        public void Governor_RackLimit_CapsInjection()
+        {
+            var settings = new CombustionModel.Settings { IgnitionTempK = 2000f };
+            var model = CreateModel(settings);
+            _fuelNorm = 0.2f;
+            _rpmNorm = 0.3f;
+            model.Tick(0.016f, engineOn: true);
+
+            model.InjectedPerStroke.ShouldBe(1f);
+            model.UnburnedFuel.ShouldBe(settings.QuenchFraction * _rpmNorm, tolerance: 1e-5f);
+        }
+
+        [Fact]
+        public void Governor_NothingIgnitesInTime_StillBurnsMostFuelLate()
+        {
+            var settings = new CombustionModel.Settings { IgnitionTempK = 2000f };
+            var model = CreateModel(settings);
+            _fuelNorm = 0.03f;
+            _rpmNorm = 0.3f;
+            model.Tick(0.016f, engineOn: true);
+
+            model.BurnFractionTemp.ShouldBe(0f);
+            model.WorkEfficiency.ShouldBe((1f - settings.QuenchFraction) * settings.LateBurnWork, tolerance: 1e-5f);
+            model.LateBurnedFuel.ShouldBeGreaterThan(model.UnburnedFuel);
+        }
+
+        [Fact]
+        public void Thermal_MisfiringEngine_SendsMoreHeatIntoTheExhaust()
+        {
+            // late burning produces less work, so the governor injects more, and the lost work heats the exhaust
+            _fuelNorm = 0.03f;
+            _rpmNorm = 0.3f;
+
+            var cold = CreateModel(new CombustionModel.Settings { IgnitionTempK = 2000f });
             cold.Tick(0.016f, engineOn: true);
 
             var warm = CreateModel(_perfectCompression);
             warm.Tick(0.016f, engineOn: true);
 
-            cold.ExhaustEnergy.ShouldBeLessThan(warm.ExhaustEnergy);
+            cold.ExhaustEnergy.ShouldBeGreaterThan(warm.ExhaustEnergy);
+            cold.UnburnedFuel.ShouldBeGreaterThan(warm.UnburnedFuel);
+        }
+
+        [Fact]
+        public void Cranking_NothingIgnitesInTime_InjectsFixedAmount()
+        {
+            var model = CreateModel(new CombustionModel.Settings { IgnitionTempK = 2000f });
+            _fuelNorm = 0f;
+            _rpmNorm = 0.1f;
+            model.Tick(0.016f, engineOn: false, cranking: true);
+
+            model.InjectedPerStroke.ShouldBe(CombustionModel.Settings.DefaultCrankingFuelPerStroke, tolerance: 1e-5f);
         }
 
         [Fact]
@@ -431,7 +509,7 @@ namespace TurboTurboTests
             }
 
             model.BurnFractionTemp.ShouldBe(1f, tolerance: 0.01f);
-            model.CylinderTempK.ShouldBeGreaterThan(model.EngineTempK);
+            model.ChamberTempK.ShouldBeGreaterThan(model.EngineTempK);
             model.EngineTempK.ShouldBeGreaterThan(CombustionModel.Settings.ThermostatOpenK);
         }
 
@@ -459,47 +537,37 @@ namespace TurboTurboTests
         {
             var settings = new CombustionModel.Settings
             {
-                TauCylinder = 500f,
+                TauChamber = 500f,
                 TauEngine = 100f,
-                CylinderGainK = -1f,
+                ChamberGainK = -1f,
                 TauCooldownOpen = -5f,
                 TauCooldownClosed = -5f,
                 PolytropicExponent = 3f,
-                CompressorEfficiency = 2f,
-                CompressionHeatLoss = -1f,
-                InductionWallHeating = 2f,
-                ResidualGasFraction = 1f,
-                ColdCompressionK = -10f,
-                WarmCompressionK = -100f,
-                MinBurnFractionAtCold = 0f,
+                IgnitionTempK = -10f,
+                IgnitionSpread = 0f,
             };
 
             settings.Validate();
 
-            settings.TauEngine.ShouldBeGreaterThan(settings.TauCylinder);
-            settings.CylinderGainK.ShouldBeGreaterThan(0f);
+            settings.TauEngine.ShouldBeGreaterThan(settings.TauChamber);
+            settings.ChamberGainK.ShouldBeGreaterThan(0f);
             settings.TauCooldownOpen.ShouldBeGreaterThan(0f);
             settings.TauCooldownClosed.ShouldBeGreaterThan(0f);
             settings.PolytropicExponent.ShouldBeInRange(1.01f, PhysicsConstants.SpecificHeatRatio);
-            settings.CompressorEfficiency.ShouldBeInRange(0.05f, 1f);
-            settings.CompressionHeatLoss.ShouldBeInRange(0f, 0.6f);
-            settings.InductionWallHeating.ShouldBeInRange(0f, 1f);
-            settings.ResidualGasFraction.ShouldBeInRange(0f, 0.2f);
-            settings.ColdCompressionK.ShouldBeGreaterThanOrEqualTo(0f);
-            settings.WarmCompressionK.ShouldBeGreaterThan(settings.ColdCompressionK);
-            settings.MinBurnFractionAtCold.ShouldBeGreaterThan(0f);
+            settings.IgnitionTempK.ShouldBeGreaterThan(0f);
+            settings.IgnitionSpread.ShouldBeGreaterThan(0f);
         }
 
         [Fact]
         public void Thermal_UnclampedCylinderGain_KeepsWallFinite()
         {
-            var settings = new CombustionModel.Settings { CylinderGainK = 100000f };
+            var settings = new CombustionModel.Settings { ChamberGainK = 100000f };
             settings.Validate();
 
-            settings.CylinderGainK.ShouldBeGreaterThan(0f);
+            settings.ChamberGainK.ShouldBeGreaterThan(0f);
 
             // an unvalidated absurd gain must still keep the wall finite at runtime
-            var model = CreateModel(new CombustionModel.Settings { CylinderGainK = 100000f });
+            var model = CreateModel(new CombustionModel.Settings { ChamberGainK = 100000f });
             _fuelNorm = 1f;
             _rpmNorm = 1f;
             for (var i = 0; i < 100; i++)
@@ -507,8 +575,8 @@ namespace TurboTurboTests
                 model.Tick(0.1f, engineOn: true);
             }
 
-            float.IsNaN(model.CylinderTempK).ShouldBeFalse();
-            model.CylinderTempK.ShouldBeGreaterThan(0f);
+            float.IsNaN(model.ChamberTempK).ShouldBeFalse();
+            model.ChamberTempK.ShouldBeGreaterThan(0f);
         }
 
         // ------------------------------------------------------------
@@ -579,8 +647,8 @@ namespace TurboTurboTests
                 model.Tick(0.5f, engineOn: true);
             }
 
-            (model.CylinderTempK - model.EngineTempK)
-                .ShouldBe(CombustionModel.Settings.DefaultCylinderGainK, tolerance: 5f);
+            (model.ChamberTempK - model.EngineTempK)
+                .ShouldBe(CombustionModel.Settings.DefaultChamberGainK, tolerance: 5f);
         }
 
         [Fact]
@@ -627,6 +695,65 @@ namespace TurboTurboTests
             full.CompressionTempK.ShouldBeGreaterThan(idle.CompressionTempK);
         }
 
+        private float ExponentAt(float rpm, float wallK)
+        {
+            var model = CreateModel(new CombustionModel.Settings());
+            model.SetTemperatureK(wallK);
+            _rpmNorm = rpm;
+            _fuelNorm = 0f;
+            model.Tick(0.001f, engineOn: true);
+            return model.CompressionExponent;
+        }
+
+        [Fact]
+        public void Exponent_WarmWallsAtRatedSpeed_IsRatedExponent()
+        {
+            ExponentAt(1f, CombustionModel.Settings.ThermostatFullOpenK)
+                .ShouldBe(new CombustionModel.Settings().PolytropicExponent, tolerance: 1e-4f);
+        }
+
+        [Fact]
+        public void Exponent_LowerSpeed_IsLower()
+        {
+            var warmK = CombustionModel.Settings.ThermostatFullOpenK;
+            var cranking = ExponentAt(0.1f, warmK);
+            var idle = ExponentAt(0.3f, warmK);
+            var full = ExponentAt(1f, warmK);
+
+            idle.ShouldBeLessThan(full);
+            cranking.ShouldBeLessThan(idle);
+        }
+
+        [Fact]
+        public void Exponent_ColdWalls_IsLower()
+        {
+            var warm = ExponentAt(1f, CombustionModel.Settings.ThermostatFullOpenK);
+            var cold = ExponentAt(1f, PhysicsConstants.ReferenceAmbientK - 40f);
+
+            cold.ShouldBe(warm - CombustionModel.ColdWallExponentDrop, tolerance: 1e-4f);
+        }
+
+        [Fact]
+        public void Exponent_Standstill_IsNotBelowOne()
+        {
+            ExponentAt(0f, PhysicsConstants.ReferenceAmbientK - 40f).ShouldBeGreaterThanOrEqualTo(1f);
+        }
+
+        [Fact]
+        public void Cranking_ColdEngine_CompressionIsInRealisticRange()
+        {
+            // a large diesel cranked from cold at 20 C reaches roughly 540..620 K at the end of compression
+            var model = CreateModel(new CombustionModel.Settings());
+            _rpmNorm = 0.1f;
+            _fuelNorm = 0f;
+            for (var i = 0; i < 50; i++)
+            {
+                model.Tick(0.1f, engineOn: false, cranking: true);
+            }
+
+            model.CompressionTempK.ShouldBeInRange(500f, 620f);
+        }
+
         [Fact]
         public void ColdStart_IdleAtReference_WarmsUntilNoTemperaturePenalty()
         {
@@ -657,28 +784,28 @@ namespace TurboTurboTests
         }
 
         [Fact]
-        public void WarmNaturallyAspiratedIdle_ColdAmbient_KeepsSmoking()
+        public void WarmNaturallyAspiratedIdle_ColdAmbient_HasLessIgnitionMarginThanTurbo()
         {
+            // without a warm aftercooler, cold intake air keeps a naturally aspirated engine closer to misfiring
             _ambientTemperatureK = PhysicsConstants.ReferenceAmbientK - 40f;
-            var combustion = new CombustionModel.Settings();
             var charger = new AtmosphericCharger(new AtmosphericCharger.Settings
             {
                 EtaPeak = 0.86f,
                 ChokeK = 0.285f,
                 LambdaCalibration = 0.525f,
-                CompressionRatio = 18f,
-                IntakeNtu = 0.15f,
             });
-            var model = new CombustionModel(() => _governor, () => _fuelNorm, () => _rpmNorm,
-                () => _ambientTemperatureK, charger, combustion, _velocitySettings);
+            var aspirated = new CombustionModel(() => _governor, () => _fuelNorm, () => _rpmNorm,
+                () => _ambientTemperatureK, charger, new CombustionModel.Settings(), _velocitySettings);
+            var turbo = CreateModel(new CombustionModel.Settings());
             _fuelNorm = 0.03f;
             _rpmNorm = 0.3f;
             for (var i = 0; i < 21600; i++)
             {
-                model.Tick(1f, engineOn: true);
+                aspirated.Tick(1f, engineOn: true);
+                turbo.Tick(1f, engineOn: true);
             }
 
-            model.BurnFractionTemp.ShouldBeLessThan(1f);
+            aspirated.IgnitionMargin.ShouldBeLessThan(turbo.IgnitionMargin);
         }
 
         // ------------------------------------------------------------
@@ -711,6 +838,14 @@ namespace TurboTurboTests
             var settings = new ExhaustVelocitySettings { ExhaustVelocityCoefficient = 4f };
 
             settings.Calculate(3f, 1.5f).ShouldBe(8f, tolerance: 0.001f);
+        }
+
+        [Fact]
+        public void VelocitySettings_Calculate_FloorsAtMinimum()
+        {
+            var settings = new ExhaustVelocitySettings { ExhaustVelocityCoefficient = 4f };
+
+            settings.Calculate(0f, 1f).ShouldBe(ExhaustVelocitySettings.MinExhaustVelocity, tolerance: 0.001f);
         }
 
         [Fact]

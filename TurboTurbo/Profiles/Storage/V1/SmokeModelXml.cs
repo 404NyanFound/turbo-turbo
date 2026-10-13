@@ -41,7 +41,7 @@ public sealed class SmokeModelXml
     internal const float DefaultSootMaxAlpha = 0.95f;
     internal const float DefaultSootPowerFloor = 0.1f;
     internal const float DefaultSootPowerExponent = 1f;
-    internal const float DefaultWetStackMaxAlpha = 0.05f;
+    internal const float DefaultWetStackMaxAlpha = 0.4f;
     internal const float DefaultOilTintStrength = 0.3f;
     internal const float DefaultOilRpmExponent = 2.5f;
 

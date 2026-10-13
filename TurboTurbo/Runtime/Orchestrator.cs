@@ -221,9 +221,8 @@ internal sealed class Orchestrator : MonoBehaviour
     }
 
     /// <summary>
-    /// Generate diagnostics, used in the <see cref="DevUI.TurboDevPanel"/>
+    /// Generates a description string based on the current state, intended for debugging.
     /// </summary>
-    /// <returns></returns>
     public string DescribeDiagnostics()
     {
         var current = CarSpawner.Instance;

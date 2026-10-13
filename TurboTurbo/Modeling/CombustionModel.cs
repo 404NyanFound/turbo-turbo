@@ -5,28 +5,25 @@ using UnityEngine;
 namespace TurboTurbo.Modeling;
 
 /// <summary>
-/// Self-contained model of a diesel engine: fueling and overfueling
-/// driven by the air charge supplied by its <see cref="ICharger"/>.
+/// Self-contained model of a diesel engine. Models combustion efficiency and
+/// other parameters, based on air charge, temperature, and more.
 /// </summary>
 public sealed class CombustionModel
 {
-    /// <summary>Configuration constants for the exhaust-state quantities. Defaults give a reasonable starting point.</summary>
+    /// <summary>Configuration constants for the combustion model. Defaults give a reasonable starting point.</summary>
     public sealed class Settings
     {
         internal const float DefaultRatedExhaustTempK = 760f;
-        internal const float DefaultTauCylinder = 10f;
-        internal const float DefaultTauEngine = 80f;
+        internal const float DefaultTauChamber = 25f;
+        internal const float DefaultTauEngine = 400f;
         internal const float DefaultTauCooldownOpen = 65f;
         internal const float DefaultTauCooldownClosed = 1300f;
-        internal const float DefaultCylinderGainK = 60f;
-        internal const float DefaultPolytropicExponent = 1.35f;
-        internal const float DefaultCompressorEfficiency = 0.75f;
-        internal const float DefaultCompressionHeatLoss = 0.15f;
-        internal const float DefaultInductionWallHeating = 0.15f;
-        internal const float DefaultResidualGasFraction = 0.04f;
-        internal const float DefaultColdCompressionK = 620f;
-        internal const float DefaultWarmCompressionK = 760f;
-        internal const float DefaultMinBurnFractionAtCold = 0.85f;
+        internal const float DefaultChamberGainK = 220f;
+        internal const float DefaultPolytropicExponent = 1.34f;
+        internal const float DefaultIgnitionTempK = 540f;
+        internal const float DefaultIgnitionSpread = 1.5f;
+        internal const float DefaultLateBurnWork = 0.5f;
+        internal const float DefaultQuenchFraction = 0.15f;
         internal const float DefaultCrankingFuelPerStroke = 0.25f;
 
         /// <summary>Block temperature [K] where the radiator thermostat begins to open.</summary>
@@ -36,25 +33,20 @@ public sealed class CombustionModel
         public const float ThermostatFullOpenK = 85f + PhysicsConstants.KelvinOffset;
 
         /// <summary>
-        /// Rated exhaust gas temperature [K] at the exhaust mouth at full power. Note that this is a target value;
-        /// transient conditions may overshoot it.
+        /// Rated exhaust gas temperature [K] in the exhaust manifold at full power.
+        /// Note that this is a target value; transient conditions may overshoot it.
         /// </summary>
         public float RatedExhaustTempK { get; set; } = DefaultRatedExhaustTempK;
-        public float TauCylinder { get; set; } = DefaultTauCylinder;
+        public float TauChamber { get; set; } = DefaultTauChamber;
         public float TauEngine { get; set; } = DefaultTauEngine;
         public float TauCooldownOpen { get; set; } = DefaultTauCooldownOpen;
         public float TauCooldownClosed { get; set; } = DefaultTauCooldownClosed;
-        public float CylinderGainK { get; set; } = DefaultCylinderGainK;
+        public float ChamberGainK { get; set; } = DefaultChamberGainK;
         public float PolytropicExponent { get; set; } = DefaultPolytropicExponent;
-        public float CompressorEfficiency { get; set; } = DefaultCompressorEfficiency;
-        public float CompressionHeatLoss { get; set; } = DefaultCompressionHeatLoss;
-        public float InductionWallHeating { get; set; } = DefaultInductionWallHeating;
-        public float ResidualGasFraction { get; set; } = DefaultResidualGasFraction;
-        public float ColdCompressionK { get; set; } = DefaultColdCompressionK;
-        public float WarmCompressionK { get; set; } = DefaultWarmCompressionK;
-
-        /// <summary>Floor on the temperature efficiency factor at the coldest extreme (0..1].</summary>
-        public float MinBurnFractionAtCold { get; set; } = DefaultMinBurnFractionAtCold;
+        public float IgnitionTempK { get; set; } = DefaultIgnitionTempK;
+        public float IgnitionSpread { get; set; } = DefaultIgnitionSpread;
+        public float LateBurnWork { get; set; } = DefaultLateBurnWork;
+        public float QuenchFraction { get; set; } = DefaultQuenchFraction;
 
         /// <summary>
         /// Fuel injected per stroke while the starter cranks the engine [0..1], where 1 is a full rack.
@@ -69,38 +61,32 @@ public sealed class CombustionModel
         public Settings(Settings other)
         {
             RatedExhaustTempK = other.RatedExhaustTempK;
-            TauCylinder = other.TauCylinder;
+            TauChamber = other.TauChamber;
             TauEngine = other.TauEngine;
             TauCooldownOpen = other.TauCooldownOpen;
             TauCooldownClosed = other.TauCooldownClosed;
-            CylinderGainK = other.CylinderGainK;
+            ChamberGainK = other.ChamberGainK;
             PolytropicExponent = other.PolytropicExponent;
-            CompressorEfficiency = other.CompressorEfficiency;
-            CompressionHeatLoss = other.CompressionHeatLoss;
-            InductionWallHeating = other.InductionWallHeating;
-            ResidualGasFraction = other.ResidualGasFraction;
-            ColdCompressionK = other.ColdCompressionK;
-            WarmCompressionK = other.WarmCompressionK;
-            MinBurnFractionAtCold = other.MinBurnFractionAtCold;
+            IgnitionTempK = other.IgnitionTempK;
+            IgnitionSpread = other.IgnitionSpread;
+            LateBurnWork = other.LateBurnWork;
+            QuenchFraction = other.QuenchFraction;
             CrankingFuelPerStroke = other.CrankingFuelPerStroke;
         }
 
         public void Validate()
         {
             RatedExhaustTempK = Mathf.Max(PhysicsConstants.ReferenceAmbientK + 0.01f, RatedExhaustTempK);
-            TauCylinder = Mathf.Max(0.01f, TauCylinder);
-            TauEngine = Mathf.Max(TauCylinder + 0.01f, TauEngine);
+            TauChamber = Mathf.Max(0.01f, TauChamber);
+            TauEngine = Mathf.Max(TauChamber + 0.01f, TauEngine);
             TauCooldownOpen = Mathf.Max(0.01f, TauCooldownOpen);
             TauCooldownClosed = Mathf.Max(TauCooldownOpen, TauCooldownClosed);
-            CylinderGainK = Mathf.Max(0.01f, CylinderGainK);
+            ChamberGainK = Mathf.Max(0.01f, ChamberGainK);
             PolytropicExponent = Mathf.Clamp(PolytropicExponent, 1.01f, PhysicsConstants.SpecificHeatRatio);
-            CompressorEfficiency = Mathf.Clamp(CompressorEfficiency, 0.05f, 1f);
-            CompressionHeatLoss = Mathf.Clamp(CompressionHeatLoss, 0f, 0.6f);
-            InductionWallHeating = Mathf.Clamp01(InductionWallHeating);
-            ResidualGasFraction = Mathf.Clamp(ResidualGasFraction, 0f, 0.2f);
-            ColdCompressionK = Mathf.Max(0f, ColdCompressionK);
-            WarmCompressionK = Mathf.Max(ColdCompressionK + 0.01f, WarmCompressionK);
-            MinBurnFractionAtCold = Mathf.Clamp(MinBurnFractionAtCold, 0.01f, 1f);
+            IgnitionTempK = Mathf.Max(1f, IgnitionTempK);
+            IgnitionSpread = Mathf.Clamp(IgnitionSpread, 0.05f, 5f);
+            LateBurnWork = Mathf.Clamp01(LateBurnWork);
+            QuenchFraction = Mathf.Clamp01(QuenchFraction);
             CrankingFuelPerStroke = Mathf.Clamp01(CrankingFuelPerStroke);
         }
     }
@@ -116,6 +102,13 @@ public sealed class CombustionModel
     private const float IsentropicExponent =
         (PhysicsConstants.SpecificHeatRatio - 1f) / PhysicsConstants.SpecificHeatRatio;
 
+    // the turbine extracts this fraction of the isentropic temperature drop
+    private const float TurbineEfficiency = 0.78f;
+
+    // a normal burn sends about 40% of the fuel's energy to the crankshaft and 30% to the exhaust. Work that a late
+    // burn fails to produce mostly ends up in the exhaust instead, scaled by this ratio.
+    private const float WorkToExhaustRatio = 0.4f / 0.3f;
+
     // Woschni's model: heat flux scales with (rpm * pressure)^0.8, cycle time with rpm^-1
     private const float WoschniChargeExponent = 0.8f;
     private const float WoschniRelExponent = -0.2f;
@@ -123,8 +116,34 @@ public sealed class CombustionModel
     // weight of the end-of-compression temperature in the cycle-mean gas temperature
     private const float GasMeanCompressionWeight = 0.5f;
 
-    private const float MaxCompressionHeatLossFraction = 0.6f;
+    // wall temperature drop below ThermostatFullOpenK at which the cold-wall exponent drop fully applies
+    private const float ColdWallSpanK = 100f;
+
+    // the following only nudge the compression temperature by 10-30 K each, so they are not tunable per engine.
+    // isentropic efficiency of the compressor, which sets how much it heats the intake air
+    private const float CompressorEfficiency = 0.75f;
+    // how quickly the polytropic exponent falls towards 1 as the engine slows down, from heat loss and leakage
+    // during the longer compression stroke
+    private const float LowSpeedCompressionLoss = 0.035f;
+    // drop of the polytropic exponent with fully cold combustion chamber surfaces
+    internal const float ColdWallExponentDrop = 0.05f;
+    // fraction of the wall-to-intake temperature difference the charge gains during induction
+    private const float InductionWallHeating = 0.06f;
+    // fraction of the trapped charge that is leftover exhaust gas
+    private const float ResidualGasFraction = 0.04f;
+
     private const float WallConductanceCeiling = 0.95f;
+
+    // ignition delay follows Wolfer's correlation: tau ~ p^-1.19 * exp(4650 / T)
+    private const float IgnitionActivationK = 4650f;
+    private const float IgnitionPressureExponent = 1.19f;
+    // reference conditions for IgnitionTempK: about idle speed, and the compression pressure [bar] at idle
+    private const float IgnitionReferenceRpm = 0.3f;
+    private const float IgnitionReferencePressure = 30f;
+    private const float MinIgnitionRpm = 0.01f;
+    // a faster stroke leaves less time, but also brings more turbulence and higher injection pressure, which
+    // shorten the delay. Net, the available time relative to the delay scales sub-linearly with 1/rpm.
+    private const float IgnitionSpeedExponent = 0.5f;
 
     public ICharger Charger { get; }
 
@@ -133,7 +152,7 @@ public sealed class CombustionModel
     /// <summary>Current charger boost pressure ratio [0..1], 0 when naturally aspirated.</summary>
     public float Boost { get; private set; }
 
-    /// <summary>Raw clamped governor (rack) command read this tick.</summary>
+    /// <summary>Raw clamped throttle (the game's governor output) read this tick.</summary>
     public float GovernorNorm { get; private set; }
 
     /// <summary>Raw clamped fuel consumption per unit time read this tick.</summary>
@@ -144,6 +163,21 @@ public sealed class CombustionModel
 
     /// <summary>Fuel consumption per engine stroke, derived from <see cref="FuelNorm"/> and <see cref="RpmNorm"/>.</summary>
     public float FuelPerStroke { get; private set; }
+
+    /// <summary>
+    /// Fuel actually injected per stroke [0..1]. The governor injects extra fuel to make up for fuel that burns too
+    /// late to produce full work, so the engine still delivers the power the game asks for.
+    /// </summary>
+    public float InjectedPerStroke { get; private set; }
+
+    /// <summary>Work produced per unit of injected fuel, relative to a clean burn [0..1].</summary>
+    public float WorkEfficiency { get; private set; }
+
+    /// <summary>Fuel that burns late in the stroke, per unit time, on the same scale as <see cref="FuelNorm"/>.</summary>
+    public float LateBurnedFuel { get; private set; }
+
+    /// <summary>Fuel that never burns, per unit time, on the same scale as <see cref="FuelNorm"/>.</summary>
+    public float UnburnedFuel { get; private set; }
 
     /// <summary>Per-stroke cylinder charge supplied by the charger.</summary>
     public float Charge { get; private set; }
@@ -176,8 +210,11 @@ public sealed class CombustionModel
     /// <summary>Exhaust plume speed [m/s] at the exhaust mouth.</summary>
     public float ExhaustVelocity { get; private set; }
 
-    /// <summary>Temperature [K] of the cylinder walls.</summary>
-    public float CylinderTempK { get; private set; }
+    /// <summary>
+    /// Temperature [K] of the combustion chamber surfaces: piston crowns, valves, cylinder heads and the top of the
+    /// liners. These heat up within tens of seconds of firing and run well above the coolant.
+    /// </summary>
+    public float ChamberTempK { get; private set; }
 
     /// <summary>Temperature [K] of the engine block and oil.</summary>
     public float EngineTempK { get; private set; }
@@ -185,8 +222,19 @@ public sealed class CombustionModel
     /// <summary>Intake charge temperature [K] after compressor heating and manifold pickup.</summary>
     public float IntakeTempK { get; private set; }
 
+    /// <summary>Effective polytropic exponent of the current compression stroke.</summary>
+    public float CompressionExponent { get; private set; }
+
     /// <summary>End-of-compression gas temperature [K].</summary>
     public float CompressionTempK { get; private set; }
+
+    /// <summary>End-of-compression pressure [bar].</summary>
+    public float CompressionPressure { get; private set; }
+
+    /// <summary>
+    /// Log ratio of the time available for ignition to the ignition delay. At 0, half of the fuel ignites in time.
+    /// </summary>
+    public float IgnitionMargin { get; private set; }
 
     /// <summary>Exhaust manifold temperature [K], also used as the next tick's residual gas temperature.</summary>
     public float ManifoldTempK { get; private set; }
@@ -197,7 +245,7 @@ public sealed class CombustionModel
     /// <summary>Air-limited combustion efficiency factor [0..1].</summary>
     public float BurnFractionAir { get; private set; }
 
-    /// <summary>Temperature-limited combustion efficiency factor [0..1].</summary>
+    /// <summary>Fraction of the injected fuel that ignites in time [0..1]. Most of the rest still burns late.</summary>
     public float BurnFractionTemp { get; private set; }
 
     /// <summary>Combined combustion efficiency factor [0..1].</summary>
@@ -219,8 +267,10 @@ public sealed class CombustionModel
         _ambientTemperatureK = ambientTemperatureK ?? throw new ArgumentNullException(nameof(ambientTemperatureK));
 
         var initial = Mathf.Max(1f, initialTemperatureK ?? _ambientTemperatureK());
-        CylinderTempK = initial;
+        ChamberTempK = initial;
         EngineTempK = initial;
+        // the first tick reads this as the residual gas temperature
+        ManifoldTempK = initial;
     }
 
     /// <summary>
@@ -250,36 +300,59 @@ public sealed class CombustionModel
         MassFlow = Charge * rpm; // fuel mass is so small relative to air mass as to be negligible
 
         var chargeFull = Charger.ChargeAtFullPower;
-        // I'm quite sure this isn't exactly right: chargeFull is < 1 for NA engines, because charge drops as RPM -> 1
-        // we should investigate consumers to figure out whether they really want charge normalised to max charge, or
-        // to full-power charge, because these are not the same.
+        // mass flow peaks at rated speed for both chargers: an NA engine's charge falls with rpm, but charge * rpm
+        // still rises all the way to rpm 1. So this is 1 at the rated point.
         var flowNorm = MassFlow / chargeFull;
-
-        var calibration = Charger.LambdaCalibration;
-        Lambda = Charge / (calibration * Mathf.Max(0.01f, fuelPerStroke));
-        Overfuel = Mathf.Max(0f, fuelPerStroke - Charge / calibration);
 
         // the intake warms up inflowing air though compression and/or heat exchange
         IntakeTempK = IntakeTemperature(ambient, EngineTempK, Charge, flowNorm);
-        // intake air mixes with residual gases and exchanges heat with the cylinder
-        var trappedTemperature = TrappedTemperature(s, IntakeTempK, CylinderTempK, ManifoldTempK);
+        // intake air mixes with residual gases and exchanges heat with the combustion chamber
+        var trappedTemperature = TrappedTemperature(IntakeTempK, ChamberTempK, ManifoldTempK);
         // the mixture is then compressed, heating it up to the ignition point
-        CompressionTempK = CompressionTemperature(trappedTemperature, flowNorm, CylinderTempK);
+        CompressionExponent = EffectiveExponent(rpm, ChamberTempK);
+        CompressionTempK = CompressionTemperature(trappedTemperature, CompressionExponent);
+        CompressionPressure = Charge * Mathf.Pow(Charger.CompressionRatio, CompressionExponent);
+
+        // fuel only burns if it ignites before expansion cools the charge too far
+        IgnitionMargin = IgnitionMarginAt(rpm);
+        // smoothstep rather than a logistic: a warm engine burns all of its fuel, without a long tail of white smoke
+        BurnFractionTemp = MathExt.Smoothstep(-s.IgnitionSpread, s.IgnitionSpread, IgnitionMargin);
+
+        // fuel that misses the ignition window mostly burns late in the expansion stroke, producing little work and
+        // sending its heat into the exhaust. Only the part quenched against the chamber surfaces never burns.
+        var missed = 1f - BurnFractionTemp;
+        var lateShare = missed * (1f - s.QuenchFraction);
+        WorkEfficiency = BurnFractionTemp + lateShare * s.LateBurnWork;
+
+        // a running engine's governor opens the rack to make up for the lost work, until the rack runs out.
+        // while cranking, the engine isn't producing power yet, so the injected amount is fixed.
+        var injectedPerStroke = cranking
+            ? fuelPerStroke
+            : Mathf.Max(fuelPerStroke, Mathf.Min(1f, fuelPerStroke / Mathf.Max(0.01f, WorkEfficiency)));
+        var lateBurnedPerStroke = injectedPerStroke * lateShare;
+        var burnedPerStroke = injectedPerStroke * BurnFractionTemp + lateBurnedPerStroke;
+        InjectedPerStroke = injectedPerStroke;
+        LateBurnedFuel = lateBurnedPerStroke * rpm;
+        UnburnedFuel = injectedPerStroke * missed * s.QuenchFraction * rpm;
+
+        // all burned fuel consumes air, whether it burns in time or late
+        var calibration = Charger.LambdaCalibration;
+        Lambda = Charge / (calibration * Mathf.Max(0.01f, burnedPerStroke));
+        Overfuel = Mathf.Max(0f, burnedPerStroke - Charge / calibration);
 
         // heavy overfueling reduces combustion efficiency.
         // simplified model for now; in reality, burn fraction already starts dropping before lambda reaches 1, as
         // non-perfect mixing causes local rich pockets to start to form in the cylinder even while global lambda is still lean
         BurnFractionAir = Mathf.Min(1f, Lambda);
-        // low compression temperature also reduces combustion efficiency
-        BurnFractionTemp = Mathf.Lerp(s.MinBurnFractionAtCold, 1f,
-            MathExt.Smoothstep(s.ColdCompressionK, s.WarmCompressionK, CompressionTempK));
         BurnFraction = BurnFractionAir * BurnFractionTemp;
 
         // dynamically derive temperature gain based on rated exhaust temperature at load.
         // this makes it easier to alter temperature behaviour of the engine: just say what the rated exhaust gas
         // temperature at exhaust manifold should be, and the rest follows.
         var tempGainK = (s.RatedExhaustTempK - PhysicsConstants.ReferenceAmbientK) * chargeFull;
-        var combustionRiseK = tempGainK * fuelPerStroke * BurnFraction / Charge;
+        // late-burned fuel also sends the work it fails to produce into the exhaust
+        var exhaustHeatPerStroke = burnedPerStroke + lateBurnedPerStroke * (1f - s.LateBurnWork) * WorkToExhaustRatio;
+        var combustionRiseK = tempGainK * exhaustHeatPerStroke * BurnFractionAir / Charge;
 
         // the wall sits at a conductance-weighted mean of the cycle-mean gas temperature and the block
         var gasMeanK = GasMeanTemperature(trappedTemperature, CompressionTempK, combustionRiseK);
@@ -289,23 +362,23 @@ public sealed class CombustionModel
         var wallConductance = rpm > 0f
             ? wallRatio * Mathf.Pow(flowNorm, WoschniChargeExponent)
             : 0f;
-        var cylinderTarget = (wallConductance * gasMeanK + EngineTempK) / (wallConductance + 1f);
-        CylinderTempK += (cylinderTarget - CylinderTempK) * (1f - Mathf.Exp(-delta / s.TauCylinder));
+        var chamberTarget = (wallConductance * gasMeanK + EngineTempK) / (wallConductance + 1f);
+        ChamberTempK += (chamberTarget - ChamberTempK) * (1f - Mathf.Exp(-delta / s.TauChamber));
 
         // the thermostat governs engine block cooling rate
         ThermostatOpen = MathExt.Smoothstep(Settings.ThermostatOpenK, Settings.ThermostatFullOpenK, EngineTempK);
         var cooldownTau = Mathf.Lerp(s.TauCooldownClosed, s.TauCooldownOpen, ThermostatOpen);
 
-        // hot cylinders warm up the block, heat flows out of the block into the environment
+        // the hot chamber warms up the block, heat flows out of the block into the environment
         var engineTau = (s.TauEngine * cooldownTau) / (s.TauEngine + cooldownTau);
-        var engineTarget = (CylinderTempK * cooldownTau + ambient * s.TauEngine)
+        var engineTarget = (ChamberTempK * cooldownTau + ambient * s.TauEngine)
                            / (s.TauEngine + cooldownTau);
         EngineTempK += (engineTarget - EngineTempK) * (1f - Mathf.Exp(-delta / engineTau));
 
         // we store this because it becomes the next tick's residual gas temperature
         ManifoldTempK = ambient + combustionRiseK;
         var turbinePressureRatio = Mathf.Max(1f, Charge);
-        TurbineTemperatureDropK = ManifoldTempK *
+        TurbineTemperatureDropK = ManifoldTempK * TurbineEfficiency *
                                   (1f - Mathf.Pow(turbinePressureRatio, -IsentropicExponent));
 
         GasTemperature = ManifoldTempK - TurbineTemperatureDropK;
@@ -319,11 +392,11 @@ public sealed class CombustionModel
         SurgeThisTick = Charger.Surging;
     }
 
-    /// <summary>Instantly sets the block and cylinder walls to the given temperature.</summary>
+    /// <summary>Instantly sets the block and combustion chamber to the given temperature.</summary>
     public void SetTemperatureK(float kelvin)
     {
         var k = Mathf.Max(1f, kelvin);
-        CylinderTempK = k;
+        ChamberTempK = k;
         EngineTempK = k;
     }
 
@@ -332,7 +405,7 @@ public sealed class CombustionModel
         var s = Tuning;
         // air heats up from compression
         var pressureRatio = Mathf.Max(1f, charge);
-        var compressorK = ambientK * (1f + (Mathf.Pow(pressureRatio, IsentropicExponent) - 1f) / s.CompressorEfficiency);
+        var compressorK = ambientK * (1f + (Mathf.Pow(pressureRatio, IsentropicExponent) - 1f) / CompressorEfficiency);
 
         // and exchanges heat with the manifold
         var flow = Mathf.Max(1e-3f, flowNorm);
@@ -341,24 +414,37 @@ public sealed class CombustionModel
         return compressorK + effectiveness * (blockK - compressorK);
     }
 
-    private static float TrappedTemperature(Settings s, float intakeK, float wallK, float residualK)
+    private static float TrappedTemperature(float intakeK, float wallK, float residualK)
     {
-        // air exchanges heat with the cylinder walls
-        var warmed = intakeK + s.InductionWallHeating * (wallK - intakeK);
+        // air exchanges heat with the chamber surfaces
+        var warmed = intakeK + InductionWallHeating * (wallK - intakeK);
         // and mixes with the residual gases
-        return (1f - s.ResidualGasFraction) * warmed + s.ResidualGasFraction * residualK;
+        return (1f - ResidualGasFraction) * warmed + ResidualGasFraction * residualK;
     }
 
-    private float CompressionTemperature(float trappedK, float flowNorm, float wallK)
+    private float EffectiveExponent(float rpm, float wallK)
     {
         var s = Tuning;
-        var adiabaticK = trappedK * Mathf.Pow(Charger.CompressionRatio, s.PolytropicExponent - 1f);
-
-        var flow = Mathf.Max(1e-3f, flowNorm);
-        var lossFraction = Mathf.Min(MaxCompressionHeatLossFraction,
-            s.CompressionHeatLoss * Mathf.Pow(flow, WoschniRelExponent));
-        return adiabaticK - lossFraction * (adiabaticK - wallK);
+        // a slower stroke gives the charge more time to lose heat to the walls and leak past the rings, so the
+        // exponent falls from its rated value towards 1 (isothermal) as the engine slows to a standstill
+        var k = LowSpeedCompressionLoss;
+        var speedFactor = (1f + k) / (1f + k / Mathf.Max(1e-3f, rpm));
+        // cold walls take more heat out of the charge
+        var coldness = Mathf.Clamp01((Settings.ThermostatFullOpenK - wallK) / ColdWallSpanK);
+        var exponent = 1f + (s.PolytropicExponent - 1f) * speedFactor - ColdWallExponentDrop * coldness;
+        return Mathf.Max(1f, exponent);
     }
+
+    private float IgnitionMarginAt(float rpm)
+    {
+        // log of (time available / ignition delay), relative to the reference conditions
+        return IgnitionActivationK * (1f / Tuning.IgnitionTempK - 1f / Mathf.Max(1f, CompressionTempK))
+               - IgnitionSpeedExponent * Mathf.Log(Mathf.Max(MinIgnitionRpm, rpm) / IgnitionReferenceRpm)
+               + IgnitionPressureExponent * Mathf.Log(Mathf.Max(0.01f, CompressionPressure) / IgnitionReferencePressure);
+    }
+
+    private float CompressionTemperature(float trappedK, float exponent)
+        => trappedK * Mathf.Pow(Charger.CompressionRatio, exponent - 1f);
 
     private static float GasMeanTemperature(float trappedK, float compressionK, float riseK)
         => trappedK + GasMeanCompressionWeight * (compressionK - trappedK) + riseK;
@@ -367,13 +453,13 @@ public sealed class CombustionModel
     {
         var s = Tuning;
         var blockK = Settings.ThermostatFullOpenK;
-        var wallK = blockK + s.CylinderGainK;
+        var wallK = blockK + s.ChamberGainK;
         var riseK = s.RatedExhaustTempK - PhysicsConstants.ReferenceAmbientK;
         var intakeK = IntakeTemperature(PhysicsConstants.ReferenceAmbientK, blockK, chargeFull, 1f);
-        var trappedK = TrappedTemperature(s, intakeK, wallK, s.RatedExhaustTempK);
-        var compressionK = CompressionTemperature(trappedK, 1f, wallK);
+        var trappedK = TrappedTemperature(intakeK, wallK, s.RatedExhaustTempK);
+        var compressionK = CompressionTemperature(trappedK, EffectiveExponent(1f, wallK));
         var gasMeanK = GasMeanTemperature(trappedK, compressionK, riseK);
-        var x = Mathf.Clamp(s.CylinderGainK / Mathf.Max(0.01f, gasMeanK - blockK), 0f, WallConductanceCeiling);
+        var x = Mathf.Clamp(s.ChamberGainK / Mathf.Max(0.01f, gasMeanK - blockK), 0f, WallConductanceCeiling);
         return x / (1f - x);
     }
 }
