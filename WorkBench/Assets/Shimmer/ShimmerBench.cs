@@ -46,6 +46,7 @@ namespace TurboTurbo.WorkBench
         private ShimmerParticles _particleEmitter;
         private SmokeParticles _smokeBench;
         private GameObject _frame;
+        private WindFrame _windFrame;
 
         private void Start()
         {
@@ -88,9 +89,12 @@ namespace TurboTurbo.WorkBench
 
             var vanillaAtlas = vanillaExhaust.GetComponent<ParticleSystemRenderer>()?.sharedMaterial?.mainTexture;
 
+            _windFrame = WindFrame.Create(null);
+
             var go = new GameObject("ShimmerParticles");
             _particleEmitter = go.AddComponent<ShimmerParticles>();
             _particleEmitter.shader = Shader.Find("TurboTurbo/HeatShimmer");
+            _particleEmitter.windFrame = _windFrame;
             _particleEmitter.Configure();
             ExhaustPlacement.PlaceAt(go.transform, vanillaExhaust.transform.position,
                 _frame.transform, exhaustOffset);
@@ -101,6 +105,7 @@ namespace TurboTurbo.WorkBench
                 _smokeBench = smokeGo.AddComponent<SmokeParticles>();
                 _smokeBench.shader = Shader.Find("TurboTurbo/Smoke");
                 _smokeBench.atlas = vanillaAtlas;
+                _smokeBench.windFrame = _windFrame;
                 _smokeBench.tuning.idleEmissionRate = idleEmissionRate;
                 _smokeBench.tuning.fullEmissionRate = fullEmissionRate;
                 _smokeBench.Configure();
@@ -141,8 +146,11 @@ namespace TurboTurbo.WorkBench
                 GasDensity = gasDensity,
                 EngineOn = engineOn,
                 LocoVelocity = Vector3.right * moveSpeed,
-                Wind = wind,
             };
+            if (_windFrame != null)
+            {
+                _windFrame.wind = wind;
+            }
             signals.Apply(_smokeBench, _particleEmitter);
 
             Material bg = _background != null ? _background.sharedMaterial : null;

@@ -148,9 +148,6 @@ namespace TurboTurbo.WorkBench
 
         public Vector3 locoVelocity;
 
-        /// <summary>World wind velocity [m/s] carrying the plume.</summary>
-        public Vector3 windVelocity;
-
         /// <summary>Per-engine emission and appearance tuning, cloned at bind.</summary>
         public Settings tuning = new Settings();
 
@@ -160,15 +157,14 @@ namespace TurboTurbo.WorkBench
         public Shader shader;
         public Texture atlas;
 
-        /// <summary>Custom simulation space. If null, world space is used.</summary>
-        public Transform customSimulationSpace;
+        /// <summary>Simulation space drifting with the wind. Required.</summary>
+        public WindFrame windFrame;
 
         private ParticleSystem _ps;
         private ParticleSystemRenderer _renderer;
         private float _emitAccumulator;
         private AnimationCurve _sizeCurve;
         private float _densityScale = 1f;
-        private Vector3 _appliedWind;
 
         public int ParticleCount => _ps.particleCount;
 
@@ -181,8 +177,9 @@ namespace TurboTurbo.WorkBench
         }
 
         /// <summary>Builds the ParticleSystem layout. Call once after the
-        /// required properties (shader, atlas, customSimulationSpace) are
-        /// assigned; call again after edits.</summary>
+        /// required properties (shader, atlas, windFrame) are
+        /// assigned; call again after edits. Disables the component
+        /// if windFrame is missing.</summary>
         public void Configure()
         {
             if (_ps == null) _ps = GetComponent<ParticleSystem>();
@@ -196,14 +193,14 @@ namespace TurboTurbo.WorkBench
 
             // some properties are deliberately not set here; we only emit particles manually
             var main = _ps.main;
-            if (customSimulationSpace != null)
+            if (windFrame != null)
             {
-                main.simulationSpace = ParticleSystemSimulationSpace.Custom;
-                main.customSimulationSpace = customSimulationSpace;
+                windFrame.Bind(_ps);
             }
             else
             {
-                main.simulationSpace = ParticleSystemSimulationSpace.World;
+                Debug.LogError("[SmokeParticles] no wind frame set, disabling");
+                enabled = false;
             }
 
             main.maxParticles = 400;
@@ -253,7 +250,6 @@ namespace TurboTurbo.WorkBench
             vol.y = s.buoyancy;
             vol.x = 0f;
             vol.z = 0f;
-            _appliedWind = Vector3.zero;
 
             var em = _ps.emission;
             em.enabled = false;
@@ -333,19 +329,6 @@ namespace TurboTurbo.WorkBench
             _renderer.material.SetFloat(TexShoulderId, TexShoulder ? 1f : 0f);
         }
 
-        /// <summary>Advects the plume with the ambient wind through the world-space velocity offset.</summary>
-        public void ApplyWind()
-        {
-            if (_ps == null) return;
-
-            if (windVelocity == _appliedWind) return;
-            _appliedWind = windVelocity;
-
-            var vol = _ps.velocityOverLifetime;
-            vol.x = windVelocity.x;
-            vol.z = windVelocity.z;
-        }
-
         public void ApplyDensityFalloff()
         {
             if (_renderer != null) _renderer.material.SetFloat(DensityFalloffId, DensityFalloff);
@@ -361,6 +344,11 @@ namespace TurboTurbo.WorkBench
             if (_renderer != null) _renderer.material.SetFloat(FadeInSecondsId, FadeInSeconds);
         }
 
+        private void OnDestroy()
+        {
+            if (windFrame != null) windFrame.Unbind(_ps);
+        }
+
         private void Update()
         {
             var dt = Time.deltaTime;
@@ -370,10 +358,7 @@ namespace TurboTurbo.WorkBench
             var s = tuning;
 
             // smoke dispersion and turbulence scale with airspeed
-            var airVelocity = locoVelocity - windVelocity;
-            var speedNorm = Mathf.Clamp01(airVelocity.magnitude / s.speedNormMax);
-
-            ApplyWind();
+            var speedNorm = Mathf.Clamp01(windFrame.AirVelocity(locoVelocity).magnitude / s.speedNormMax);
 
             var noise = _ps.noise;
             noise.strength = Mathf.Lerp(s.turbulenceStrengthMin, s.turbulenceStrengthMax, speedNorm);
@@ -395,7 +380,7 @@ namespace TurboTurbo.WorkBench
                 var upSpeed = velocity.Calculate(massFlow, gasDensity);
 
                 // custom emit requires us to apply the simulation space manually
-                var simPos = ParticleSimSpace.Position(customSimulationSpace, transform.position);
+                var simPos = windFrame.ToSimPosition(transform.position);
 
                 var baseEmitVelocity = transform.forward * upSpeed;
                 var jitterVelocity = (speedNorm * s.speedJitter + 0.15f);
@@ -409,7 +394,8 @@ namespace TurboTurbo.WorkBench
                     var emitVelocity = baseEmitVelocity * Random.Range(0.85f, 1.15f);
                     var worldVelocity = locoVelocity + emitVelocity + Random.insideUnitSphere * jitterVelocity;
 
-                    var simSpaceVelocity = ParticleSimSpace.Direction(customSimulationSpace, worldVelocity);
+                    // the simulation space drifts with the air, so particle velocities are relative to the air
+                    var simSpaceVelocity = windFrame.AirVelocity(worldVelocity);
 
                     var baseSize = Mathf.Max(0.01f, s.startSize);
                     var spread = 1f + Mathf.Max(0f, s.startSizeVariance);

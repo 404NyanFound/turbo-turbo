@@ -43,6 +43,16 @@ internal sealed class EngineSimulationHost : MonoBehaviour
 
     private const float RunningEngineTemperatureK = 80f + PhysicsConstants.KelvinOffset;
 
+    private static WindFrame _windFrame;
+    private static WindFrame SharedWindFrame
+    {
+        get
+        {
+            if (_windFrame == null) _windFrame = WindFrame.Create(WorldMover.OriginShiftParent);
+            return _windFrame;
+        }
+    }
+
     private Logger _log;
     private bool _simBound;
     private bool _loggedNoSim;
@@ -270,7 +280,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         smoke.velocity = Velocity;
         smoke.shader = ModAssets.SmokeShader;
         smoke.atlas = GameAssets.SmokeAtlas;
-        smoke.customSimulationSpace = WorldMover.OriginShiftParent;
+        smoke.windFrame = SharedWindFrame;
         smoke.Configure();
         return smoke;
     }
@@ -283,7 +293,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         shimmer.tuning = tuning;
         shimmer.velocity = Velocity;
         shimmer.shader = ModAssets.HeatShimmerShader;
-        shimmer.customSimulationSpace = WorldMover.OriginShiftParent;
+        shimmer.windFrame = SharedWindFrame;
         shimmer.Configure();
         return shimmer;
     }
@@ -300,8 +310,9 @@ internal sealed class EngineSimulationHost : MonoBehaviour
             GasDensity = CombustionModel.GasDensity,
             EngineOn = firing,
             LocoVelocity = TrainCar.GetVelocity(),
-            Wind = AmbientTemperature.Wind
         };
+
+        SharedWindFrame.wind = AmbientTemperature.Wind;
 
         foreach (var e in Exhausts)
         {

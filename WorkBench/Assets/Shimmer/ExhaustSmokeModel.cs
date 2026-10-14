@@ -195,19 +195,6 @@ namespace TurboTurbo.Modeling
         }
     }
 
-    /// <summary>
-    /// Translates positions and directions into a custom simulation space,
-    /// if present (not null). Otherwise, returns the input unchanged.
-    /// </summary>
-    public static class ParticleSimSpace
-    {
-        public static Vector3 Position(Transform simSpace, Vector3 position)
-            => simSpace == null ? position : simSpace.InverseTransformPoint(position);
-
-        public static Vector3 Direction(Transform simSpace, Vector3 direction)
-            => simSpace == null ? direction : simSpace.InverseTransformDirection(direction);
-    }
-
     public static class ExhaustPlacement
     {
         /// <summary>Parents an emitter to the car and orients it for smoke emission.</summary>

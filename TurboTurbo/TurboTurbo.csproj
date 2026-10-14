@@ -45,6 +45,9 @@
     <Compile Include="..\WorkBench\Assets\Shimmer\SmokeParticles.cs">
       <Link>Effects\SmokeParticles.cs</Link>
     </Compile>
+    <Compile Include="..\WorkBench\Assets\Shimmer\WindFrame.cs">
+      <Link>Effects\WindFrame.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <!-- Unity + framework assemblies -->
