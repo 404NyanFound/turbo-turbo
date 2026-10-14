@@ -5,7 +5,7 @@ namespace TurboTurbo.Profiles.Storage.V1;
 public sealed class CombustionXml
 {
     internal const float DefaultRatedExhaustTempK = 760f;
-    internal const float DefaultTauChamber = 25f;
+    internal const float DefaultTauChamber = 10f;
     internal const float DefaultTauEngine = 400f;
     internal const float DefaultTauCooldownOpen = 65f;
     internal const float DefaultTauCooldownClosed = 1300f;
