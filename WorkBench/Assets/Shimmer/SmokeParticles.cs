@@ -224,7 +224,9 @@ namespace TurboTurbo.WorkBench
                 enabled = false;
             }
 
-            main.maxParticles = 400;
+            main.maxParticles = ParticleBudget.Capacity(
+                Mathf.Max(s.idleEmissionRate, s.fullEmissionRate),
+                s.lifetime * (1f + LifetimeJitter));
             main.gravityModifier = 0f;
 
             _sizeCurve.SetExponent(s.growthExponent);
@@ -398,8 +400,7 @@ namespace TurboTurbo.WorkBench
             {
                 _emitAccumulator -= n;
 
-                // just a safety to avoid runaway particle counts if there's a long lag spike
-                n = Mathf.Min(n, 30);
+                n = Mathf.Min(n, ParticleBudget.MaxBurst);
 
                 var upSpeed = velocity.Calculate(massFlow, gasDensity);
 

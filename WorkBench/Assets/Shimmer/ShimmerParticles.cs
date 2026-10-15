@@ -18,6 +18,9 @@ namespace TurboTurbo
         private static readonly int Outline = Shader.PropertyToID("_Outline");
         private static readonly int Debug1 = Shader.PropertyToID("_Debug");
 
+        // relative spread of particle lifetimes around the nominal lifetime
+        private const float LifetimeJitter = 0.1f;
+
         public sealed class Settings
         {
             internal const float DefaultIdleRate = 5f;
@@ -180,7 +183,9 @@ namespace TurboTurbo
             {
                 Debug.LogWarning("[ShimmerParticles] no wind frame set, particles will not be emitted");
             }
-            main.maxParticles = 200;
+            main.maxParticles = ParticleBudget.Capacity(
+                Mathf.Max(s.idleRate, s.fullRate),
+                s.lifetime * Mathf.Max(1f, s.speedLifetimeScale) * (1f + LifetimeJitter));
             main.gravityModifier = 0f;
 
             _sizeCurve = ParticleCurves.BakeSizeCurve(s.startSize, s.sizeOverLifetimeEnd, s.sizeOverLifetimeExponent);
@@ -264,8 +269,7 @@ namespace TurboTurbo
             {
                 _emitAccumulator -= n;
 
-                // just a safety to avoid runaway particle counts if there's a long lag spike
-                n = Mathf.Min(n, 30);
+                n = Mathf.Min(n, ParticleBudget.MaxBurst);
 
                 var upSpeed = velocity.Calculate(massFlow, gasDensity);
 
@@ -299,7 +303,7 @@ namespace TurboTurbo
                         velocity = simSpaceVelocity,
                         startSize = UnityEngine.Random.Range(baseSize / spread, baseSize * spread),
                         startColor = Color.white,
-                        startLifetime = lifetime * UnityEngine.Random.Range(0.9f, 1.1f),
+                        startLifetime = lifetime * UnityEngine.Random.Range(1f - LifetimeJitter, 1f + LifetimeJitter),
                     };
                     _ps.Emit(ep, 1);
                 }

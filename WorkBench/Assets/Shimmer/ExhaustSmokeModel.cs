@@ -288,6 +288,25 @@ namespace TurboTurbo.Modeling
     }
 
     /// <summary>
+    /// Particle capacity for emitters that spawn particles manually at a bounded rate.
+    /// </summary>
+    public static class ParticleBudget
+    {
+        /// <summary>Most particles emitted in a single frame, so a long frame cannot release a runaway burst.</summary>
+        public const int MaxBurst = 30;
+
+        /// <summary>
+        /// Capacity for emission at up to <paramref name="maxRate"/> [1/s] of particles living up to
+        /// <paramref name="maxLifetime"/> [s]. The live count can never exceed what was emitted within one maximum
+        /// lifetime; one burst on top absorbs rounding in the per-frame emission.
+        /// </summary>
+        public static int Capacity(float maxRate, float maxLifetime)
+        {
+            return Mathf.CeilToInt(Mathf.Max(0f, maxRate) * Mathf.Max(0f, maxLifetime)) + MaxBurst;
+        }
+    }
+
+    /// <summary>
     /// Size multiplier for particles that grow by <c>growth · (age / ReferenceAge)^p</c> in absolute time.
     /// Unity evaluates particle growth over normalised age, so this type helps us abstract over that implementation
     /// detail, allowing us to generate a correctly shaped curve by simply passing in the right configuration.
