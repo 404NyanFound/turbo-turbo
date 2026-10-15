@@ -58,7 +58,7 @@ internal static class StockConfiguration
                 // bigger exhaust opening means particles start out bigger too
                 e.startSize = 0.49f;
                 e.startSizeVariance = 0.22f;
-                e.sizeOverLifetimeEnd = 5f;
+                e.plumeSize = 5.3f;
             })
             .ConfigureShimmerEmitter(e =>
             {
@@ -95,7 +95,8 @@ internal static class StockConfiguration
                 // sized to match the exhaust pipe
                 e.startSize = 0.32f;
                 e.startSizeVariance = 0.26f;
-                e.sizeOverLifetimeEnd = 5f;
+                e.plumeSize = 5.7f;
+                e.growthExponent = 0.75f;
             })
             .ConfigureShimmerEmitter(e =>
             {
@@ -130,7 +131,7 @@ internal static class StockConfiguration
             .ConfigureSmokeEmitter(e =>
             {
                 e.startSize = 0.25f;
-                e.sizeOverLifetimeEnd = 4.8f;
+                e.plumeSize = 4.9f;
             })
             .ConfigureShimmerEmitter(e =>
             {
@@ -171,7 +172,8 @@ internal static class StockConfiguration
             {
                 e.startSize = 0.3f;
                 e.startSizeVariance = 0.18f;
-                e.sizeOverLifetimeEnd = 3.6f;
+                e.plumeSize = 4.3f;
+                e.growthExponent = 0.75f;
             })
             .ConfigureShimmerEmitter(e =>
             {

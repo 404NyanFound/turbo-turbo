@@ -45,6 +45,13 @@ namespace TurboTurbo.WorkBench
         // texture sheet animation rate
         private const float AnimationFps = 30f;
 
+        // relative spread of particle lifetimes around the nominal lifetime
+        private const float LifetimeJitter = 0.1f;
+
+        // particle age [s] at which a nominal particle reaches the plume size.
+        // the exponent shapes growth around it
+        private const float GrowthReferenceAge = 5f;
+
         public sealed class Settings
         {
             internal const float DefaultIdleEmissionRate = 15f;
@@ -52,13 +59,14 @@ namespace TurboTurbo.WorkBench
             internal const float DefaultLifetime = 4.5f;
             internal const float DefaultStartSize = 0.39f;
             internal const float DefaultStartSizeVariance = 0.29f;
-            internal const float DefaultSizeOverLifetimeEnd = 6f;
-            internal const float DefaultSizeOverLifetimeExponent = 0.65f;
+            internal const float DefaultPlumeSize = 6.4f;
+            internal const float DefaultGrowthExponent = 0.65f;
             internal const float DefaultBuoyancy = 0.1f;
             internal const float DefaultDrag = 0.6f;
             internal const float DefaultAngularVelocityMax = 20f;
             internal const float DefaultSpeedNormMax = 15f;
             internal const float DefaultSpeedLifetimeScale = 0.3f;
+            internal const float DefaultSpeedGrowthScale = 2.2f;
             internal const float DefaultSpeedJitter = 0.5f;
             internal const float DefaultTurbulenceStrengthMin = 0.125f;
             internal const float DefaultTurbulenceStrengthMax = 1.25f;
@@ -77,9 +85,9 @@ namespace TurboTurbo.WorkBench
 
             public float startSizeVariance = DefaultStartSizeVariance;
 
-            public float sizeOverLifetimeEnd = DefaultSizeOverLifetimeEnd;
+            public float plumeSize = DefaultPlumeSize;
 
-            public float sizeOverLifetimeExponent = DefaultSizeOverLifetimeExponent;
+            public float growthExponent = DefaultGrowthExponent;
 
             public float buoyancy = DefaultBuoyancy;
 
@@ -90,6 +98,8 @@ namespace TurboTurbo.WorkBench
             public float speedNormMax = DefaultSpeedNormMax;
 
             public float speedLifetimeScale = DefaultSpeedLifetimeScale;
+
+            public float speedGrowthScale = DefaultSpeedGrowthScale;
 
             public float speedJitter = DefaultSpeedJitter;
 
@@ -116,13 +126,14 @@ namespace TurboTurbo.WorkBench
                 lifetime = other.lifetime;
                 startSize = other.startSize;
                 startSizeVariance = other.startSizeVariance;
-                sizeOverLifetimeEnd = other.sizeOverLifetimeEnd;
-                sizeOverLifetimeExponent = other.sizeOverLifetimeExponent;
+                plumeSize = other.plumeSize;
+                growthExponent = other.growthExponent;
                 buoyancy = other.buoyancy;
                 drag = other.drag;
                 angularVelocityMax = other.angularVelocityMax;
                 speedNormMax = other.speedNormMax;
                 speedLifetimeScale = other.speedLifetimeScale;
+                speedGrowthScale = other.speedGrowthScale;
                 speedJitter = other.speedJitter;
                 turbulenceStrengthMin = other.turbulenceStrengthMin;
                 turbulenceStrengthMax = other.turbulenceStrengthMax;
@@ -130,6 +141,12 @@ namespace TurboTurbo.WorkBench
                 turbulenceScrollSpeed = other.turbulenceScrollSpeed;
                 lightSaturation = other.lightSaturation;
                 maxShadowFloor = other.maxShadowFloor;
+            }
+
+            public void Validate()
+            {
+                // relative wind may only shorten the lifetime
+                speedLifetimeScale = Mathf.Clamp01(speedLifetimeScale);
             }
         }
 
@@ -166,7 +183,7 @@ namespace TurboTurbo.WorkBench
         private ParticleSystem _ps;
         private ParticleSystemRenderer _renderer;
         private float _emitAccumulator;
-        private AnimationCurve _sizeCurve;
+        private readonly GrowthCurve _sizeCurve = new GrowthCurve(GrowthReferenceAge);
         private float _densityScale = 1f;
 
         public int ParticleCount => _ps.particleCount;
@@ -193,6 +210,7 @@ namespace TurboTurbo.WorkBench
             }
 
             var s = tuning;
+            s.Validate();
 
             // some properties are deliberately not set here; we only emit particles manually
             var main = _ps.main;
@@ -209,12 +227,14 @@ namespace TurboTurbo.WorkBench
             main.maxParticles = 400;
             main.gravityModifier = 0f;
 
-            // growth: smoke expands as it disperses
-            _sizeCurve = ParticleCurves.BakeSizeCurve(s.startSize, s.sizeOverLifetimeEnd, s.sizeOverLifetimeExponent);
+            _sizeCurve.SetExponent(s.growthExponent);
+            // ensures that the size curve instantly recalculates to the new exponent,
+            // instead of smoothly stepping towards it
+            _sizeCurve.Reset();
 
             var sol = _ps.sizeOverLifetime;
             sol.enabled = true;
-            sol.size = new ParticleSystem.MinMaxCurve(1f, _sizeCurve);
+            sol.size = new ParticleSystem.MinMaxCurve(1f, _sizeCurve.Curve);
 
             // the whole alpha envelope lives in the shader, so the particle system must not apply one
             var col = _ps.colorOverLifetime;
@@ -362,6 +382,7 @@ namespace TurboTurbo.WorkBench
 
             // smoke dispersion and turbulence scale with airspeed
             var speedNorm = Mathf.Clamp01(windFrame.AirVelocity(locoVelocity).magnitude / s.speedNormMax);
+            UpdateGrowth(speedNorm, dt);
 
             var noise = _ps.noise;
             noise.strength = Mathf.Lerp(s.turbulenceStrengthMin, s.turbulenceStrengthMax, speedNorm);
@@ -388,7 +409,7 @@ namespace TurboTurbo.WorkBench
                 var baseEmitVelocity = transform.forward * upSpeed;
                 var jitterVelocity = (speedNorm * s.speedJitter + 0.15f);
 
-                var lifetime = s.lifetime * Mathf.Lerp(1f, s.speedLifetimeScale, speedNorm);
+                var lifetime = LifetimeAt(speedNorm);
 
                 var spawnColor = EncodeDensityColor(Model.Color, emissionRate);
 
@@ -411,7 +432,7 @@ namespace TurboTurbo.WorkBench
                         velocity = simSpaceVelocity,
                         startSize = Random.Range(baseSize / spread, baseSize * spread),
                         startColor = spawnColor,
-                        startLifetime = lifetime * Random.Range(0.9f, 1.1f),
+                        startLifetime = lifetime * Random.Range(1f - LifetimeJitter, 1f + LifetimeJitter),
                         // random orientation + slow spin gives the appearance of a turbulent smoke column
                         rotation = Random.Range(0f, 360f),
                         angularVelocity = Random.Range(-s.angularVelocityMax, s.angularVelocityMax),
@@ -419,6 +440,39 @@ namespace TurboTurbo.WorkBench
                     _ps.Emit(ep, 1);
                 }
             }
+        }
+
+        private float LifetimeAt(float speedNorm)
+        {
+            return tuning.lifetime * Mathf.Lerp(1f, tuning.speedLifetimeScale, speedNorm);
+        }
+
+        /// <summary>
+        /// Calculates the growth increase a particle experiences, relative to its start size, at the reference age,
+        /// based on the loco's normalised speed relative to the wind frame. A value of 1 means the particle grows by
+        /// 100% at the reference age.
+        /// </summary>
+        private float RelativeGrowth(float speedNorm)
+        {
+            var s = tuning;
+            var p = _sizeCurve.Exponent;
+            // interpolating speedGrowthScale^(-1/p) like a lifetime means speedGrowthScale = speedLifetimeScale^-p
+            // exactly cancels the lifetime change, leaving the size curve independent of wind
+            var growthTime = Mathf.Pow(Mathf.Max(0.01f, s.speedGrowthScale), -1f / p);
+            var w = Mathf.Pow(Mathf.Lerp(1f, growthTime, speedNorm), -p);
+            return Mathf.Max(0f, s.plumeSize / Mathf.Max(0.01f, s.startSize) - 1f) * w;
+        }
+
+        /// <summary>
+        /// Updates the growth curve based on the loco's normalised speed, relative to the wind frame.
+        /// </summary>
+        private void UpdateGrowth(float speedNorm, float dt)
+        {
+            var growth = RelativeGrowth(speedNorm);
+            if (!_sizeCurve.SetGrowth(growth, LifetimeAt(speedNorm), tuning.lifetime, dt)) return;
+
+            var sol = _ps.sizeOverLifetime;
+            sol.size = new ParticleSystem.MinMaxCurve(1f, _sizeCurve.Curve);
         }
 
         // encode per-particle density into the alpha channel of the given color
