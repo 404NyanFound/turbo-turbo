@@ -13,7 +13,7 @@ Shader "TurboTurbo/Smoke"
         _MaxFadeDist ("Max Camera Fade Distance", Range(0, 10)) = 5
         _DensityScale ("Density Scale", Float) = 1
         _DensityFalloff ("Density Falloff", Float) = 1.5
-        _SoftParticlesFade ("Soft Particles Fade (m)", Range(0, 1)) = 0.15
+        _SoftParticlesFade ("Soft Particles Fade", Range(0, 1)) = 0.3
         _FadeInSeconds ("Fade In (s)", Range(0, 0.25)) = 0.11
     }
     SubShader
@@ -67,6 +67,7 @@ Shader "TurboTurbo/Smoke"
                 float4 screenPos : TEXCOORD3;
                 float eyeDepth : TEXCOORD4;
                 half shadowFloor : TEXCOORD5;
+                float softFadeDist : TEXCOORD6;
                 UNITY_FOG_COORDS(2)
             };
 
@@ -87,6 +88,9 @@ Shader "TurboTurbo/Smoke"
                 o.color = v.color;
                 float size = v.texcoords.z;
                 float age = v.texcoords.w;
+
+                // larger particles have expanded more, so their smoke should blend more smoothly against geometry
+                o.softFadeDist = max(1e-4, _SoftParticlesFade * size);
 
                 // note: gamma decode requires corresponding encode on the emitter side
                 // gamma decode -> rescale -> apply size fade
@@ -135,7 +139,7 @@ Shader "TurboTurbo/Smoke"
                 float2 screenUV = i.screenPos.xy / i.screenPos.w;
                 float rawZ = tex2D(_CameraDepthTexture, screenUV).r;
                 float sceneZ = LinearEyeDepth(rawZ);
-                float softFade = saturate((sceneZ - i.eyeDepth) / max(1e-4, _SoftParticlesFade));
+                float softFade = saturate((sceneZ - i.eyeDepth) / i.softFadeDist);
 
                 half4 tex = tex2D(_MainTex, i.uv);
                 float alpha = tex.a * i.color.a * softFade;

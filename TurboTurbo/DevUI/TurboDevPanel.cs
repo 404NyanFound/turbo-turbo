@@ -390,8 +390,8 @@ internal sealed class TurboDevPanel : MonoBehaviour
     {
         GUILayout.BeginVertical(GUI.skin.box);
         GUILayout.BeginHorizontal();
-        GUILayout.Label(new GUIContent($"Soft particles: {_softParticlesFade:0.00} m",
-                "Distance over which smoke fades out as it approaches opaque geometry."),
+        GUILayout.Label(new GUIContent($"Soft particles: {_softParticlesFade:0.00} x size",
+                "Distance over which smoke fades out as it approaches opaque geometry, as a fraction of particle size."),
             GUILayout.Width(170f));
         var next = GUILayout.HorizontalSlider(_softParticlesFade, 0f, 1f);
         GUILayout.EndHorizontal();

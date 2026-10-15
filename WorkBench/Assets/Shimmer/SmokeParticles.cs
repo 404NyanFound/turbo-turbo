@@ -26,8 +26,11 @@ namespace TurboTurbo.WorkBench
         /// <summary>Decay exponent for the density model, applied to every emitter.</summary>
         public static float DensityFalloff = 1.8f;
 
-        /// <summary>Distance [m] over which smoke fades out as it approaches opaque geometry. 0 disables.</summary>
-        public static float SoftParticlesFade = 0.15f;
+        /// <summary>
+        /// Distance over which smoke fades out as it approaches opaque geometry, as a fraction of particle size.
+        /// 0 disables.
+        /// </summary>
+        public static float SoftParticlesFade = 0.3f;
 
         /// <summary>Absolute time [s] for a new smoke particle to reach full opacity.</summary>
         public static float FadeInSeconds = 0.07f;
