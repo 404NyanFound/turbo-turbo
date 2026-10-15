@@ -42,6 +42,9 @@ namespace TurboTurbo.WorkBench
         private const float FadeDistMin = 1.5f;
         private const float FadeDistMax = 2.5f;
 
+        // texture sheet animation rate
+        private const float AnimationFps = 30f;
+
         public sealed class Settings
         {
             internal const float DefaultIdleEmissionRate = 15f;
@@ -259,8 +262,8 @@ namespace TurboTurbo.WorkBench
             tsa.numTilesX = 8;
             tsa.numTilesY = 8;
             tsa.mode = ParticleSystemAnimationMode.Grid;
-            tsa.cycleCount = 1;
-            tsa.frameOverTime = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0f, 1f, 1f));
+            tsa.timeMode = ParticleSystemAnimationTimeMode.FPS;
+            tsa.fps = AnimationFps;
             // random phase seems to look nice, though the game doesn't do this
             tsa.startFrame = new ParticleSystem.MinMaxCurve(0f, 1f);
 
