@@ -63,9 +63,10 @@ Shader "TurboTurbo/Smoke"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                fixed4 color : TEXCOORD1;
+                half4 color : TEXCOORD1; // rgb = lit tint (may exceed 1), a = opacity
                 float4 screenPos : TEXCOORD3;
                 float eyeDepth : TEXCOORD4;
+                half shadowFloor : TEXCOORD5;
                 UNITY_FOG_COORDS(2)
             };
 
@@ -105,6 +106,24 @@ Shader "TurboTurbo/Smoke"
                 // to hold at max opacity for a while, so it needs a saturate
                 o.color.a = saturate(tau) * fadeIn * ageFade * camFade;
 
+                // compress the dynamic range on bright colours, to avoid white
+                // smoke having unnaturally dark shadows, while preserving
+                // detail in darker colours
+                o.shadowFloor = Luminance(v.color.rgb) * _MaxShadowFloor;
+
+                // lighting is uniform across the particle, so we run this in the vertex stage
+                float3 L = _WorldSpaceLightPos0.xyz;
+                float facing = lerp(_FacingFloor, 1.0, saturate(L.y));
+
+                half3 light = ShadeSH9(half4(0, 1, 0, 1)) + _LightColor0.rgb * facing;
+
+                // de-intensify the light colour tint, otherwise the smoke turns
+                // too yellow at sunset and too blue at night
+                half lightLum = Luminance(light);
+                light = lerp(lightLum.xxx, light, _Saturation);
+
+                o.color.rgb = v.color.rgb * light;
+
                 UNITY_TRANSFER_FOG(o, o.pos);
                 return o;
             }
@@ -126,24 +145,9 @@ Shader "TurboTurbo/Smoke"
                 half3 shoulder = tex.rgb * (1.0 + _TexKnee) / (tex.rgb + _TexKnee);
                 half3 curve = lerp(tex.rgb, shoulder, _TexShoulder);
 
-                // compress the dynamic range on bright colours, to avoid white
-                // smoke having unnaturally dark shadows, while preserving
-                // detail in darker colours
-                half tintLum = Luminance(i.color.rgb);
-                half dynamicFloor = tintLum * _MaxShadowFloor;
-                half3 remappedTex = lerp(dynamicFloor.xxx, 1.0.xxx, curve);
+                half3 remappedTex = lerp(i.shadowFloor.xxx, 1.0.xxx, curve);
 
-                float3 L = _WorldSpaceLightPos0.xyz;
-                float facing = lerp(_FacingFloor, 1.0, saturate(L.y));
-
-                half3 light = ShadeSH9(half4(0, 1, 0, 1)) + _LightColor0.rgb * facing;
-
-                // de-intensify the light colour tint, otherwise the smoke turns
-                // too yellow at sunset and too blue at night
-                half lightLum = Luminance(light);
-                light = lerp(lightLum.xxx, light, _Saturation);
-
-                half4 col = half4(remappedTex * i.color.rgb * light, alpha);
+                half4 col = half4(remappedTex * i.color.rgb, alpha);
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
