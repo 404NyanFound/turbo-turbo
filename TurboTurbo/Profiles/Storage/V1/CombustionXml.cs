@@ -6,12 +6,12 @@ public sealed class CombustionXml
 {
     internal const float DefaultRatedExhaustTempK = 760f;
     internal const float DefaultTauChamber = 10f;
-    internal const float DefaultTauEngine = 400f;
+    internal const float DefaultTauEngine = 650f;
     internal const float DefaultTauCooldownOpen = 65f;
     internal const float DefaultTauCooldownClosed = 1300f;
     internal const float DefaultChamberGainK = 220f;
     internal const float DefaultPolytropicExponent = 1.34f;
-    internal const float DefaultIgnitionTempK = 540f;
+    internal const float DefaultIgnitionTempK = 580f;
     internal const float DefaultIgnitionSpread = 1.5f;
     internal const float DefaultLateBurnWork = 0.5f;
     internal const float DefaultQuenchFraction = 0.15f;

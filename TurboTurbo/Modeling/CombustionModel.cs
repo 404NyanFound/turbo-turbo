@@ -15,12 +15,12 @@ public sealed class CombustionModel
     {
         internal const float DefaultRatedExhaustTempK = 760f;
         internal const float DefaultTauChamber = 10f;
-        internal const float DefaultTauEngine = 400f;
+        internal const float DefaultTauEngine = 650f;
         internal const float DefaultTauCooldownOpen = 65f;
         internal const float DefaultTauCooldownClosed = 1300f;
         internal const float DefaultChamberGainK = 220f;
         internal const float DefaultPolytropicExponent = 1.34f;
-        internal const float DefaultIgnitionTempK = 540f;
+        internal const float DefaultIgnitionTempK = 580f;
         internal const float DefaultIgnitionSpread = 1.5f;
         internal const float DefaultLateBurnWork = 0.5f;
         internal const float DefaultQuenchFraction = 0.15f;
@@ -109,8 +109,9 @@ public sealed class CombustionModel
     // burn fails to produce mostly ends up in the exhaust instead, scaled by this ratio.
     private const float WorkToExhaustRatio = 0.4f / 0.3f;
 
-    // Woschni's model: heat flux scales with (rpm * pressure)^0.8, cycle time with rpm^-1
-    private const float WoschniChargeExponent = 0.8f;
+    // this isnt' quite in accordance with Woschni's model, but it accounts for the fact that we're lumping
+    // everything into a single node, which is already plenty of detail for our purposes
+    private const float WoschniChargeExponent = 0.5f;
     private const float WoschniRelExponent = -0.2f;
 
     // weight of the end-of-compression temperature in the cycle-mean gas temperature
