@@ -18,9 +18,33 @@ namespace TurboTurboTests
                 var speed = BuiltinWindProfile.Evaluate(t);
 
                 float.IsNaN(speed).ShouldBeFalse();
-                speed.ShouldBeGreaterThanOrEqualTo(BuiltinWindProfile.MeanSpeed - BuiltinWindProfile.Amplitude - 1e-4f);
-                speed.ShouldBeLessThanOrEqualTo(BuiltinWindProfile.MeanSpeed + BuiltinWindProfile.Amplitude + 1e-4f);
+                speed.ShouldBeGreaterThanOrEqualTo(0f);
+                speed.ShouldBeLessThanOrEqualTo(BuiltinWindProfile.MaxSpeed + 1e-4f);
             }
+        }
+
+        [Theory]
+        [InlineData(0.0f, 1.0f)]
+        [InlineData(1.0f, 2.0f)]
+        [InlineData(2.0f, 3.0f)]
+        [InlineData(3.0f, 4.0f)]
+        [InlineData(4.0f, 5.0f)]
+        public void Evaluate_FollowsTruncatedRayleighDistribution(float lo, float hi)
+        {
+            const int sampleCount = 200000;
+            var scale = BuiltinWindProfile.ReferenceMeanSpeed * 2.0 / Math.Sqrt(Math.PI);
+            double Cdf(double v) => 1.0 - Math.Exp(-(v / scale) * (v / scale));
+
+            var inRange = 0;
+            for (var i = 0; i < sampleCount; i++)
+            {
+                // a step that doesn't line up with either noise layer
+                var speed = BuiltinWindProfile.Evaluate(i * 7.31f);
+                if (speed >= lo && speed < hi) inRange++;
+            }
+
+            var expected = (Cdf(hi) - Cdf(lo)) / Cdf(BuiltinWindProfile.MaxSpeed);
+            ((double)inRange / sampleCount).ShouldBe(expected, tolerance: 0.015);
         }
 
         [Fact]

@@ -18,6 +18,15 @@ internal sealed class AmbientTemperature : MonoBehaviour
     /// <summary>Wind only reads the game's own weather signal, so it can be polled far more often.</summary>
     private const float WindUpdateIntervalSeconds = 0.25f;
 
+    /// <summary>
+    /// Upper bound [s] of the random offset into the generated wind series. Large enough for thousands of
+    /// distinct series, small enough to keep float precision in the noise well below a frame.
+    /// </summary>
+    private const float MaxWindTimeOffsetSeconds = 100000f;
+
+    /// <summary>Start offset [s] into the generated wind series.</summary>
+    private static float _windTimeOffset;
+
     private readonly SeasonsReader _seasons = new();
     private readonly BuiltinWeatherReader _builtin = new();
 
@@ -61,6 +70,8 @@ internal sealed class AmbientTemperature : MonoBehaviour
 
     public static AmbientTemperature Create()
     {
+        _windTimeOffset = Random.Range(0f, MaxWindTimeOffsetSeconds);
+
         var go = new GameObject(Naming.Create("AmbientTemperature"));
         DontDestroyOnLoad(go);
         var ambient = go.AddComponent<AmbientTemperature>();
@@ -138,7 +149,7 @@ internal sealed class AmbientTemperature : MonoBehaviour
 
         var degrees = FiniteOr(driver.WindDirection.CurrentValue, WindDirectionDegrees);
 
-        var speed = BuiltinWindProfile.Evaluate(Time.unscaledTime);
+        var speed = BuiltinWindProfile.Evaluate(Time.unscaledTime + _windTimeOffset);
         var source = AmbientSource.Builtin;
         if (driver.todAnimation != null && driver.WindSpeed.IsOverridden && driver.WindSpeed.CurrentValue > 5)
         {
