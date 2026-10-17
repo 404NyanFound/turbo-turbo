@@ -15,6 +15,8 @@ Shader "TurboTurbo/Smoke"
         _DensityFalloff ("Density Falloff", Float) = 1.5
         _SoftParticlesFade ("Soft Particles Fade", Range(0, 1)) = 0.3
         _FadeInSeconds ("Fade In (s)", Range(0, 0.25)) = 0.11
+        // DV applies 1.8 to smoke, but 1 will case the smoke to fade just as fast as surrounding objects
+        _FogBoost ("Fog Boost", Range(0, 5)) = 1
     }
     SubShader
     {
@@ -33,7 +35,6 @@ Shader "TurboTurbo/Smoke"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_fog
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
 
@@ -49,7 +50,45 @@ Shader "TurboTurbo/Smoke"
             float _DensityFalloff;
             float _SoftParticlesFade;
             float _FadeInSeconds;
+            float _FogBoost;
             sampler2D_float _CameraDepthTexture;
+
+            // DV controls these globals to apply fog
+            float4 _SceneFogParams; // x = density * sqrt(1/ln 2), y = density / ln 2, zw = linear scale/offset
+            float4 _SceneFogMode; // x = UnityEngine.FogMode
+            float4 _DistanceParams; // x = -start distance, z = distance fog on, w = height fog on
+            float4 _DensityParams; // x = distance density
+            float4 _HeightParams[2]; // per eye: x = fog top, y = camera y - fog top, z = camera inside fog, w = height density / 2
+
+            // Fraction of the smoke that remains visible through the game's fog
+            float SceneFogFactor(float3 worldPos)
+            {
+                float3 toCamera = _WorldSpaceCameraPos - worldPos;
+
+                float g = _DistanceParams.x;
+                if (_DistanceParams.z == 1)
+                {
+                    g += (length(toCamera) - _ProjectionParams.y) * _DensityParams.x;
+                }
+                if (_DistanceParams.w == 1)
+                {
+                    float4 h = _HeightParams[0];
+                    float fDotP = worldPos.y - h.x;
+                    float c1 = h.z * (fDotP + h.y);
+                    float c2 = min((1 - 2 * h.z) * fDotP, 0);
+                    g -= length(h.w * toCamera) * (c1 - c2 * c2 / abs(toCamera.y + 1e-5));
+                }
+                g = max(g * _FogBoost, 0);
+
+                if (_SceneFogMode.x == 1) return saturate(g * _SceneFogParams.z + _SceneFogParams.w);
+                if (_SceneFogMode.x == 2) return saturate(exp2(-g * _SceneFogParams.y));
+                if (_SceneFogMode.x == 3)
+                {
+                    float f = g * _SceneFogParams.x;
+                    return saturate(exp2(-f * f));
+                }
+                return 1;
+            }
 
             struct appdata
             {
@@ -68,7 +107,6 @@ Shader "TurboTurbo/Smoke"
                 float eyeDepth : TEXCOORD4;
                 half shadowFloor : TEXCOORD5;
                 float softFadeDist : TEXCOORD6;
-                UNITY_FOG_COORDS(2)
             };
 
             v2f vert (appdata v)
@@ -106,9 +144,13 @@ Shader "TurboTurbo/Smoke"
                 // so multiply by a smooth fade-to-zero at end of life
                 float ageFade = 1.0 - smoothstep(0.0, 1.0, saturate((age - 0.75) / 0.25));
 
+                // by the time we get to draw, the foggy scene is already rendered, so for us
+                // fog is just another transparency factor
+                float fog = SceneFogFactor(mul(unity_ObjectToWorld, v.vertex).xyz);
+
                 // decode + rescale process can result in tau > 1, which is deliberate as it allows particles
                 // to hold at max opacity for a while, so it needs a saturate
-                o.color.a = saturate(tau) * fadeIn * ageFade * camFade;
+                o.color.a = saturate(tau) * fadeIn * ageFade * camFade * fog;
 
                 // compress the dynamic range on bright colours, to avoid white
                 // smoke having unnaturally dark shadows, while preserving
@@ -127,8 +169,6 @@ Shader "TurboTurbo/Smoke"
                 light = lerp(lightLum.xxx, light, _Saturation);
 
                 o.color.rgb = v.color.rgb * light;
-
-                UNITY_TRANSFER_FOG(o, o.pos);
                 return o;
             }
 
@@ -151,10 +191,7 @@ Shader "TurboTurbo/Smoke"
 
                 half3 remappedTex = lerp(i.shadowFloor.xxx, 1.0.xxx, curve);
 
-                half4 col = half4(remappedTex * i.color.rgb, alpha);
-
-                UNITY_APPLY_FOG(i.fogCoord, col);
-                return col;
+                return half4(remappedTex * i.color.rgb, alpha);
             }
             ENDCG
         }
