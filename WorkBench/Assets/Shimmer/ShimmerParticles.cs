@@ -165,7 +165,7 @@ namespace TurboTurbo
 
         /// <summary>Builds the ParticleSystem layout. Call once after the
         /// required properties (shader, windFrame) are assigned;
-        /// call again after edits.</summary>
+        /// call again after edits. Throws if windFrame is missing.</summary>
         public void Configure()
         {
             if (_ps == null) _ps = GetComponent<ParticleSystem>();
@@ -175,14 +175,11 @@ namespace TurboTurbo
 
             // some properties are deliberately not set here; we only emit particles manually
             var main = _ps.main;
-            if (windFrame != null)
+            if (windFrame == null)
             {
-                windFrame.Bind(_ps);
+                throw new InvalidOperationException("[ShimmerParticles] windFrame must be assigned before Configure");
             }
-            else
-            {
-                Debug.LogWarning("[ShimmerParticles] no wind frame set, particles will not be emitted");
-            }
+            windFrame.Bind(_ps);
             main.maxParticles = ParticleBudget.Capacity(
                 Mathf.Max(s.idleRate, s.fullRate),
                 s.lifetime * Mathf.Max(1f, s.speedLifetimeScale) * (1f + LifetimeJitter));
@@ -256,8 +253,6 @@ namespace TurboTurbo
 
         private void Update()
         {
-            if (windFrame == null) return;
-
             var dt = Time.deltaTime;
 
             var s = tuning;

@@ -205,8 +205,7 @@ namespace TurboTurbo.WorkBench
 
         /// <summary>Builds the ParticleSystem layout. Call once after the
         /// required properties (shader, atlas, windFrame) are
-        /// assigned; call again after edits. Disables the component
-        /// if windFrame is missing.</summary>
+        /// assigned; call again after edits. Throws if windFrame is missing.</summary>
         public void Configure()
         {
             if (_ps == null) _ps = GetComponent<ParticleSystem>();
@@ -216,20 +215,17 @@ namespace TurboTurbo.WorkBench
                 Debug.LogWarning("[SmokeParticles] missing shader or atlas, smoke will not render");
             }
 
+            if (windFrame == null)
+            {
+                throw new System.InvalidOperationException("[SmokeParticles] windFrame must be assigned before Configure");
+            }
+            windFrame.Bind(_ps);
+
             var s = tuning;
             s.Validate();
 
             // some properties are deliberately not set here; we only emit particles manually
             var main = _ps.main;
-            if (windFrame != null)
-            {
-                windFrame.Bind(_ps);
-            }
-            else
-            {
-                Debug.LogError("[SmokeParticles] no wind frame set, disabling");
-                enabled = false;
-            }
 
             main.maxParticles = ParticleBudget.Capacity(
                 Mathf.Max(IdleEmissionRate, FullEmissionRate),

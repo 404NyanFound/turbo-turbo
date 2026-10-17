@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DV.Simulation.Cars;
 
 using TurboTurbo.Assets;
+using TurboTurbo.Configuration;
 using TurboTurbo.Modeling;
 using TurboTurbo.Profiles;
 using TurboTurbo.Runtime.Environment;
@@ -13,11 +14,9 @@ using UnityEngine;
 namespace TurboTurbo.Runtime;
 
 /// <summary>
-/// Per-car runtime host, attached to the car's root GameObject by the
-/// Orchestrator when a matching loco profile exists, living alongside
-/// DV's own per-car runtime components.
-/// Waits for the car's simulation to initialize, then binds the configured
-/// features to it.
+/// Host for all runtime behaviour on a single locomotive. It is meant to be attached
+/// to a locomotive's root game object. The host will automatically attach its simulation
+/// and effects once the car is live.
 /// </summary>
 internal sealed class EngineSimulationHost : MonoBehaviour
 {
@@ -89,7 +88,6 @@ internal sealed class EngineSimulationHost : MonoBehaviour
     {
         Profile = configuration;
 
-        // per-car context: logs from multiple locos stay distinguishable
         var car = GetComponent<TrainCar>();
         TrainCar = car;
         _log = Log.ForContext(car != null ? $"host:{car.LogIdentifier()}" : "host");
@@ -246,6 +244,8 @@ internal sealed class EngineSimulationHost : MonoBehaviour
             Exhausts.Add(emitters);
         }
 
+        ConfigureEmitters();
+
         EffectsBound = true;
         _log.Info($"effects bound ({Exhausts.Count} exhaust emitters)");
     }
@@ -281,8 +281,26 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         smoke.shader = ModAssets.SmokeShader;
         smoke.atlas = GameAssets.SmokeAtlas;
         smoke.windFrame = SharedWindFrame;
-        smoke.Configure();
         return smoke;
+    }
+
+    /// <summary>
+    /// (re)configures every emitter from its current tuning and the user settings. Called once
+    /// by the host after binding. If you make any changes to particle emitters afterwards, you
+    /// must call this again.
+    /// </summary>
+    public void ConfigureEmitters()
+    {
+        var settings = SettingsStore.Current;
+        SmokeParticles.Lifetime = settings.SmokeLifetime;
+        SmokeParticles.IdleEmissionRate = settings.SmokeIdleEmissionRate;
+        SmokeParticles.FullEmissionRate = settings.SmokeFullEmissionRate;
+
+        foreach (var e in Exhausts)
+        {
+            e.Smoke.Configure();
+            e.Shimmer.Configure();
+        }
     }
 
     private ShimmerParticles CreateShimmerEmitter(int index, ShimmerParticles.Settings tuning)
@@ -294,7 +312,6 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         shimmer.velocity = Velocity;
         shimmer.shader = ModAssets.HeatShimmerShader;
         shimmer.windFrame = SharedWindFrame;
-        shimmer.Configure();
         return shimmer;
     }
 
@@ -341,7 +358,10 @@ internal sealed class EngineSimulationHost : MonoBehaviour
         }
         Exhausts.Clear();
 
-        Orchestrator.Instance?.Forget(this);
+        if (Orchestrator.Instance != null)
+        {
+            Orchestrator.Instance.Forget(this);
+        }
     }
 
     private bool IsClaimedByAnotherHost(ParticleSystem ps)

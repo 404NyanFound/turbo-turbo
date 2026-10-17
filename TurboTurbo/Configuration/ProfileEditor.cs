@@ -72,11 +72,7 @@ internal sealed class ProfileEditor : MonoBehaviour
         _requiresReconfigure = false;
         if (_host == null) return;
 
-        foreach (var e in _host.Exhausts)
-        {
-            e.Smoke.Configure();
-            e.Shimmer.Configure();
-        }
+        _host.ConfigureEmitters();
     }
 
     private void OnGUI()

@@ -6,7 +6,6 @@ using TurboTurbo.DevUI;
 using TurboTurbo.Profiles;
 using TurboTurbo.Runtime;
 using TurboTurbo.Runtime.Environment;
-using TurboTurbo.WorkBench;
 
 namespace TurboTurbo;
 
@@ -37,11 +36,6 @@ public static class Main
         ModAssets.Initialize(entry.Path);
 
         SettingsStore.Initialize(entry);
-
-        SmokeParticles.Lifetime = SettingsStore.Current.SmokeLifetime;
-        SmokeParticles.IdleEmissionRate = SettingsStore.Current.SmokeIdleEmissionRate;
-        SmokeParticles.FullEmissionRate = SettingsStore.Current.SmokeFullEmissionRate;
-
         SettingsPanel.Initialize();
         ProfileService.Initialize();
 
