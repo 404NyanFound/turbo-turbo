@@ -40,7 +40,33 @@ internal static class ParticleSystemInspector
               $"density={RenderSettings.fogDensity:0.###} linear={RenderSettings.fogStartDistance:0.#}..{RenderSettings.fogEndDistance:0.#}"
             : "off";
 
-        return $"lighting: sun={sunText}\nambient: {ambient}\nfog: {fog}";
+        return $"lighting: sun={sunText}\nambient: {ambient}\nfog: {fog}\n{DescribeSceneFog()}";
+    }
+
+    private static string DescribeSceneFog()
+    {
+        static string Global(string name) => $"{name}={Shader.GetGlobalVector(name).ToString("G4")}";
+
+        static string GlobalArray(string name)
+        {
+            var values = Shader.GetGlobalVectorArray(name);
+            return values is { Length: > 0 } ? $"{name}[0]={values[0].ToString("G4")}" : $"{name}=unset";
+        }
+
+        var globals = string.Join(" ", new[]
+        {
+            Global("_SceneFogParams"), Global("_SceneFogMode"), Global("_DistanceParams"), Global("_DensityParams"),
+            GlobalArray("_HeightParams"), GlobalArray("_DirLightParams"), Global("_DirLightColor"),
+            $"_FogColor={Shader.GetGlobalColor("_FogColor")}",
+        });
+
+        var main = Camera.main;
+        var scattering = Object.FindObjectsOfType<TOD_Scattering>()
+            .Select(s => $"'{s.name}' enabled={s.enabled} mainCamera={main != null && s.gameObject == main.gameObject}")
+            .ToList();
+        var scatteringText = scattering.Count > 0 ? string.Join(", ", scattering) : "none";
+
+        return $"sceneFog: {globals}\nscattering: {scatteringText}";
     }
 
     public static string Describe(ParticleSystem root)
