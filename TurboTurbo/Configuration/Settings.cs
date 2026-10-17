@@ -2,6 +2,7 @@
 
 using TurboTurbo.Profiles;
 using TurboTurbo.Profiles.Storage.V1;
+using TurboTurbo.WorkBench;
 
 using UnityModManagerNet;
 
@@ -18,6 +19,9 @@ public class Settings : UnityModManager.ModSettings
     public bool DeveloperMode;
 
     public bool UseSeasons = true;
+
+    /// <summary>Nominal smoke particle lifetime [s].</summary>
+    public float SmokeLifetime = SmokeParticles.DefaultLifetime;
 
     public List<LocoProfileXml> LocoProfiles = new();
 

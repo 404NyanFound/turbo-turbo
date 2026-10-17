@@ -6,7 +6,6 @@ public sealed class SmokeEmitterXml
 {
     internal const float DefaultIdleEmissionRate = 15f;
     internal const float DefaultFullEmissionRate = 75f;
-    internal const float DefaultLifetime = 4.5f;
     internal const float DefaultStartSize = 0.39f;
     internal const float DefaultStartSizeVariance = 0.29f;
     internal const float DefaultPlumeSize = 6.4f;
@@ -30,9 +29,6 @@ public sealed class SmokeEmitterXml
 
     [DefaultValue(DefaultFullEmissionRate)]
     public float fullEmissionRate = DefaultFullEmissionRate;
-
-    [DefaultValue(DefaultLifetime)]
-    public float lifetime = DefaultLifetime;
 
     [DefaultValue(DefaultStartSize)]
     public float startSize = DefaultStartSize;

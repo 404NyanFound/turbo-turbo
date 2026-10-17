@@ -165,7 +165,6 @@ internal static class ProfileMapper
         {
             idleEmissionRate = xml.idleEmissionRate,
             fullEmissionRate = xml.fullEmissionRate,
-            lifetime = xml.lifetime,
             startSize = xml.startSize,
             startSizeVariance = xml.startSizeVariance,
             plumeSize = xml.plumeSize,
@@ -190,7 +189,6 @@ internal static class ProfileMapper
         {
             idleEmissionRate = settings.idleEmissionRate,
             fullEmissionRate = settings.fullEmissionRate,
-            lifetime = settings.lifetime,
             startSize = settings.startSize,
             startSizeVariance = settings.startSizeVariance,
             plumeSize = settings.plumeSize,

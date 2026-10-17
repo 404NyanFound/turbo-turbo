@@ -35,8 +35,6 @@ internal static class SmokeEmitterSection
             0f, 1f, true, () => f.tuning.startSizeVariance, v => { foreach (var s in smokes) s.tuning.startSizeVariance = v; }, TweakGrade.Basic);
 
         // Developer-grade: some of these are better suited to global settings, but they live here for now.
-        section.AddFloat("Lifetime", "Smoke particle lifetime in seconds.",
-            0.5f, 6f, true, () => f.tuning.lifetime, v => { foreach (var s in smokes) s.tuning.lifetime = v; }, TweakGrade.Developer);
         section.AddFloat("Min rate", "Emission rate [p/s] at zero load.",
             0f, 60f, false, () => f.tuning.idleEmissionRate, v => { foreach (var s in smokes) s.tuning.idleEmissionRate = v; }, TweakGrade.Developer);
         section.AddFloat("Max rate", "Emission rate [p/s] at full load.",

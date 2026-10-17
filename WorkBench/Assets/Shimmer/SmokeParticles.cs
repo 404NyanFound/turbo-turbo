@@ -35,6 +35,13 @@ namespace TurboTurbo.WorkBench
         /// <summary>Absolute time [s] for a new smoke particle to reach full opacity.</summary>
         public static float FadeInSeconds = 0.07f;
 
+        public const float DefaultLifetime = 4.5f;
+
+        /// <summary>
+        /// Nominal smoke particle lifetime [s] in still air.
+        /// </summary>
+        public static float Lifetime = DefaultLifetime;
+
         /// <summary>Soft shoulder applied to the atlas before the shadow ramp. Smaller = stronger lift.</summary>
         public static float TexKnee = 0.15f;
 
@@ -59,7 +66,6 @@ namespace TurboTurbo.WorkBench
         {
             internal const float DefaultIdleEmissionRate = 15f;
             internal const float DefaultFullEmissionRate = 75f;
-            internal const float DefaultLifetime = 4.5f;
             internal const float DefaultStartSize = 0.39f;
             internal const float DefaultStartSizeVariance = 0.29f;
             internal const float DefaultPlumeSize = 6.4f;
@@ -81,8 +87,6 @@ namespace TurboTurbo.WorkBench
             public float idleEmissionRate = DefaultIdleEmissionRate;
 
             public float fullEmissionRate = DefaultFullEmissionRate;
-
-            public float lifetime = DefaultLifetime;
 
             public float startSize = DefaultStartSize;
 
@@ -126,7 +130,6 @@ namespace TurboTurbo.WorkBench
             {
                 idleEmissionRate = other.idleEmissionRate;
                 fullEmissionRate = other.fullEmissionRate;
-                lifetime = other.lifetime;
                 startSize = other.startSize;
                 startSizeVariance = other.startSizeVariance;
                 plumeSize = other.plumeSize;
@@ -229,7 +232,7 @@ namespace TurboTurbo.WorkBench
 
             main.maxParticles = ParticleBudget.Capacity(
                 Mathf.Max(s.idleEmissionRate, s.fullEmissionRate),
-                s.lifetime * (1f + LifetimeJitter));
+                Lifetime * (1f + LifetimeJitter));
             main.gravityModifier = 0f;
 
             _sizeCurve.SetExponent(s.growthExponent);
@@ -448,7 +451,7 @@ namespace TurboTurbo.WorkBench
 
         private float LifetimeAt(float speedNorm)
         {
-            return tuning.lifetime * Mathf.Lerp(1f, tuning.speedLifetimeScale, speedNorm);
+            return Lifetime * Mathf.Lerp(1f, tuning.speedLifetimeScale, speedNorm);
         }
 
         /// <summary>
@@ -473,7 +476,7 @@ namespace TurboTurbo.WorkBench
         private void UpdateGrowth(float speedNorm, float dt)
         {
             var growth = RelativeGrowth(speedNorm);
-            if (!_sizeCurve.SetGrowth(growth, LifetimeAt(speedNorm), tuning.lifetime, dt)) return;
+            if (!_sizeCurve.SetGrowth(growth, LifetimeAt(speedNorm), Lifetime, dt)) return;
 
             var sol = _ps.sizeOverLifetime;
             sol.size = new ParticleSystem.MinMaxCurve(1f, _sizeCurve.Curve);
