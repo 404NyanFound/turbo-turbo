@@ -2,35 +2,25 @@
 
 An engine effects mod for Derail Valley.
 
-## Description
-
-TurboTurbo adds a turbocharger to the engine simulation. The turbocharger simulation is used to drive dynamic smoke effects:
-
-- Apply throttle quickly and you'll see heavy black soot as the turbo spins up
-- A clean burning engine now produces little smoke, hot air shimmer means exhaust is still visible
-- At higher engine power, more exhaust is produced: smoke is heavier and flies out higher
-- Throttling up after prolonged idling vaporises unburned fuel that has accumulated in the exhaust, creating white smoke
-
-Currently only the DE6 is supported, other engines will be added soon.
+TurboTurbo extends the diesel engine simulation in Derail Valley to drive
+realistic exhaust smoke effects using custom shaders.
 
 ## Installation instructions
 
-Note that this mod is still in beta. I have tested it extensively and have not found any issues, but if you find anything, let me know. All feedback is welcome.
-
 To install, download the ZIP file and extract to the Mods directory.
-
-## Main features
-
-See description. There is a pretty detailed simulation underlying all this. If you're interested in adjusting the effects, open the dev panel (enter `turbodev` in console), or bind a hotkey via the mod settings.
-
-## Mod compatibility
-
-No compatibility problems known. Integration with other mods is possible but still experimental. If you'd like to integrate support in a vehicle mod, contact me on the official Derail Valley discord server (@geluk).
+If you use modded locomotives, also consider installing the
+[Community Profiles](https://github.com/turboturbo-dv/turbo-turbo-contrib).
 
 ## Development
 
-Requires the .NET SDK and Unity 2019.4 (for the asset bundle). Run `build.ps1` once to detect the game directory (or set `GameDir` yourself); the projects import the generated `GameDir.props`.
+Requires the .NET SDK and Unity 2019.4 (for the asset bundle). Run `build.ps1`
+once to detect the game directory (or set `GameDir` yourself); the projects
+import the generated `GameDir.props`.
 
-- **Build and deploy:** `dotnet build TurboTurbo/TurboTurbo.csproj` builds the plugin and copies it, plus `info.json`, into the game's `Mods/TurboTurbo`, stamping the mod version.
-- **Test:** `dotnet test TurboTurboTests/TurboTurboTests.csproj` (the test project builds TurboTurbo with `DeployMod=false`, so testing never touches the game install).
-- **Shaders and the asset bundle:** `WorkBench/` is a Unity 2019.4 project that builds the `turboturbo_assets` bundle. Shader or texture changes require rebuilding it from the editor via the `TurboTurbo/Build and Deploy` menu; the C# build does not recompile shaders.
+- **The mod:** `dotnet build TurboTurbo/TurboTurbo.csproj` builds the
+  mod and deploys it by default
+  (you can set `DeployMod` to `false` to prevent this)
+- **Asset bundle:** `WorkBench/` is a Unity 2019.4 project that
+  builds the `turboturbo_assets` bundle. Shader changes require rebuilding it
+  from the editor via the `TurboTurbo/Build and Deploy` menu
+- **Packaging:** `build.ps1` creates a release package and writes it to `./out`
