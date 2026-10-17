@@ -5,8 +5,12 @@ using UnityEngine;
 namespace TurboTurbo.Modeling;
 
 /// <summary>
-/// Self-contained model of a diesel engine. Models combustion efficiency and
-/// other parameters, based on air charge, temperature, and more.
+/// Self-contained model of a diesel engine. This is intended to clip on to the game's DieselEngineDirect.
+/// We don't modify or replace it in any way, as that would be too fragile. For our purposes, it is perfectly
+/// fine to just read what the engine does, and derive what the combustion in that engine would be doing.
+///
+/// Which is what we do here, accounting for fuel, rpm, air charge, and various temperatures in order to
+/// figure out what is happening in the engine. Outputs drive the visual effects.
 /// </summary>
 public sealed class CombustionModel
 {
@@ -49,8 +53,10 @@ public sealed class CombustionModel
         public float QuenchFraction { get; set; } = DefaultQuenchFraction;
 
         /// <summary>
-        /// Fuel injected per stroke while the starter cranks the engine [0..1], where 1 is a full rack.
-        /// The game only fuels the engine once it has caught; an idle stroke there is 0.1.
+        /// Fuel injected per stroke while the starter cranks the engine [0..1].
+        /// DV injects no fuel while starting the engine. We do want to inject fuel because poor combustion neatly
+        /// falls out of our model on these conditions, resulting in the diesel vapour you get on an engine start.
+        /// So to account for this, we override fuel/stroke to this value while the engine is starting.
         /// </summary>
         public float CrankingFuelPerStroke { get; set; } = DefaultCrankingFuelPerStroke;
 
@@ -114,13 +120,12 @@ public sealed class CombustionModel
     private const float WoschniChargeExponent = 0.5f;
     private const float WoschniRelExponent = -0.2f;
 
-    // weight of the end-of-compression temperature in the cycle-mean gas temperature
+    // weight of the end-of-compression temperature in the mean gas temperature
     private const float GasMeanCompressionWeight = 0.5f;
 
-    // wall temperature drop below ThermostatFullOpenK at which the cold-wall exponent drop fully applies
+    // wall temperature drop below ThermostatFullOpenK at which the cold wall exponent drop fully applies
     private const float ColdWallSpanK = 100f;
 
-    // the following only nudge the compression temperature by 10-30 K each, so they are not tunable per engine.
     // isentropic efficiency of the compressor, which sets how much it heats the intake air
     private const float CompressorEfficiency = 0.75f;
     // how quickly the polytropic exponent falls towards 1 as the engine slows down, from heat loss and leakage
@@ -138,12 +143,12 @@ public sealed class CombustionModel
     // ignition delay follows Wolfer's correlation: tau ~ p^-1.19 * exp(4650 / T)
     private const float IgnitionActivationK = 4650f;
     private const float IgnitionPressureExponent = 1.19f;
-    // reference conditions for IgnitionTempK: about idle speed, and the compression pressure [bar] at idle
+    // reference conditions for IgnitionTempK; engine idle
     private const float IgnitionReferenceRpm = 0.3f;
     private const float IgnitionReferencePressure = 30f;
     private const float MinIgnitionRpm = 0.01f;
-    // a faster stroke leaves less time, but also brings more turbulence and higher injection pressure, which
-    // shorten the delay. Net, the available time relative to the delay scales sub-linearly with 1/rpm.
+    // a faster stroke leaves less time for ignition, but also brings more turbulence and higher injection pressure.
+    // an exponent below linear (to 1/rpm) is defensible for our model
     private const float IgnitionSpeedExponent = 0.5f;
 
     public ICharger Charger { get; }
@@ -162,12 +167,13 @@ public sealed class CombustionModel
     /// <summary>Normalized engine speed read this tick.</summary>
     public float RpmNorm { get; private set; }
 
-    /// <summary>Fuel consumption per engine stroke, derived from <see cref="FuelNorm"/> and <see cref="RpmNorm"/>.</summary>
+    /// <summary>Fuel consumption per stroke, derived from <c>fuelNorm / rpm</c></summary>
     public float FuelPerStroke { get; private set; }
 
     /// <summary>
-    /// Fuel actually injected per stroke [0..1]. The governor injects extra fuel to make up for fuel that burns too
-    /// late to produce full work, so the engine still delivers the power the game asks for.
+    /// Fuel actually injected per stroke [0..1]. Because we don't actually write-back torque to the game,
+    /// DV's governor won't adjust fuel/stroke to account for our lower torque. We use a simplified simulation
+    /// of what the governor would do, as we only care about the visual effects.
     /// </summary>
     public float InjectedPerStroke { get; private set; }
 
@@ -212,12 +218,16 @@ public sealed class CombustionModel
     public float ExhaustVelocity { get; private set; }
 
     /// <summary>
-    /// Temperature [K] of the combustion chamber surfaces: piston crowns, valves, cylinder heads and the top of the
-    /// liners. These heat up within tens of seconds of firing and run well above the coolant.
+    /// Temperature [K] of the combustion chamber surfaces, these react quickly to power changes and
+    /// are used to determine whether injected fuel condenses or evaporates.
     /// </summary>
     public float ChamberTempK { get; private set; }
 
-    /// <summary>Temperature [K] of the engine block and oil.</summary>
+    /// <summary>
+    /// Temperature [K] of the engine block and oil.
+    /// The block feeds and sinks heat to/from the chamber surfaces and gives us the slow response
+    /// that prevents an idling engine from cooling too quickly.
+    /// </summary>
     public float EngineTempK { get; private set; }
 
     /// <summary>Intake charge temperature [K] after compressor heating and manifold pickup.</summary>
@@ -301,8 +311,8 @@ public sealed class CombustionModel
         MassFlow = Charge * rpm; // fuel mass is so small relative to air mass as to be negligible
 
         var chargeFull = Charger.ChargeAtFullPower;
-        // mass flow peaks at rated speed for both chargers: an NA engine's charge falls with rpm, but charge * rpm
-        // still rises all the way to rpm 1. So this is 1 at the rated point.
+        // mass flow peaks at rated speed for both chargers, even though charge drops slightly
+        // with RPM on natural aspiration
         var flowNorm = MassFlow / chargeFull;
 
         // the intake warms up inflowing air though compression and/or heat exchange
@@ -316,7 +326,9 @@ public sealed class CombustionModel
 
         // fuel only burns if it ignites before expansion cools the charge too far
         IgnitionMargin = IgnitionMarginAt(rpm);
-        // smoothstep rather than a logistic: a warm engine burns all of its fuel, without a long tail of white smoke
+        // this should more realistically be a logistic curve, but smoothstep removes the tails, which
+        // is easier for us to deal with right now as we have no good way to render slight fuel inclusions
+        // in our current model
         BurnFractionTemp = MathExt.Smoothstep(-s.IgnitionSpread, s.IgnitionSpread, IgnitionMargin);
 
         // fuel that misses the ignition window mostly burns late in the expansion stroke, producing little work and
@@ -376,7 +388,7 @@ public sealed class CombustionModel
                            / (s.TauEngine + cooldownTau);
         EngineTempK += (engineTarget - EngineTempK) * (1f - Mathf.Exp(-delta / engineTau));
 
-        // we store this because it becomes the next tick's residual gas temperature
+        // this becomes the next tick's residual gas temperature
         ManifoldTempK = ambient + combustionRiseK;
         var turbinePressureRatio = Mathf.Max(1f, Charge);
         TurbineTemperatureDropK = ManifoldTempK * TurbineEfficiency *
@@ -427,7 +439,7 @@ public sealed class CombustionModel
     {
         var s = Tuning;
         // a slower stroke gives the charge more time to lose heat to the walls and leak past the rings, so the
-        // exponent falls from its rated value towards 1 (isothermal) as the engine slows to a standstill
+        // exponent falls towards 1 as the engine slows to a standstill
         var k = LowSpeedCompressionLoss;
         var speedFactor = (1f + k) / (1f + k / Mathf.Max(1e-3f, rpm));
         // cold walls take more heat out of the charge
