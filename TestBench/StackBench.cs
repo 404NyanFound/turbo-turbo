@@ -218,6 +218,6 @@ namespace TestBench
         }
 
         private static float FlowNorm(CombustionModel model) =>
-            Mathf.Clamp01(model.MassFlow / Mathf.Max(1e-4f, model.Charger.ChargeAtFullPower));
+            Mathf.Clamp01(model.MassFlow / Mathf.Max(1e-4f, model.Charger.RatedCharge));
     }
 }

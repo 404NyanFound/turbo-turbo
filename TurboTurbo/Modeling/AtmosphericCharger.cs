@@ -67,7 +67,7 @@ public sealed class AtmosphericCharger : ICharger
 
     public float Charge { get; private set; }
 
-    public float ChargeAtFullPower => Tuning.EtaPeak * (1f - Tuning.ChokeK);
+    public float RatedCharge => Tuning.EtaPeak * (1f - Tuning.ChokeK);
 
     public float Boost => 0f;
 

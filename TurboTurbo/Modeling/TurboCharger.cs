@@ -91,7 +91,7 @@ public sealed class TurboCharger : ICharger
     /// </summary>
     public float Charge => 1f + Tuning.BoostChargeMultiplier * Boost;
 
-    public float ChargeAtFullPower => 1f + Tuning.BoostChargeMultiplier;
+    public float RatedCharge => 1f + Tuning.BoostChargeMultiplier;
 
     public TurboCharger(Settings settings)
     {

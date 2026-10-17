@@ -49,21 +49,21 @@ namespace TurboTurboTests
         }
 
         [Fact]
-        public void TurboCharger_ChargeAtFullPower_IsOnePlusMultiplier()
+        public void TurboCharger_RatedCharge_IsOnePlusMultiplier()
         {
             var settings = new TurboCharger.Settings();
             var charger = new TurboCharger(settings);
 
-            charger.ChargeAtFullPower.ShouldBe(1f + settings.BoostChargeMultiplier, tolerance: 0.0001f);
+            charger.RatedCharge.ShouldBe(1f + settings.BoostChargeMultiplier, tolerance: 0.0001f);
         }
 
         [Fact]
-        public void AtmosphericCharger_ChargeAtFullPower_UsesRpmOneChoke()
+        public void AtmosphericCharger_RatedCharge_UsesRpmOneChoke()
         {
             var settings = new AtmosphericCharger.Settings();
             var charger = new AtmosphericCharger(settings);
 
-            charger.ChargeAtFullPower.ShouldBe(
+            charger.RatedCharge.ShouldBe(
                 settings.EtaPeak * (1f - settings.ChokeK), tolerance: 0.0001f);
         }
 

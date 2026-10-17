@@ -310,10 +310,10 @@ public sealed class CombustionModel
         Charge = Charger.Charge;
         MassFlow = Charge * rpm; // fuel mass is so small relative to air mass as to be negligible
 
-        var chargeFull = Charger.ChargeAtFullPower;
+        var ratedCharge = Charger.RatedCharge;
         // mass flow peaks at rated speed for both chargers, even though charge drops slightly
         // with RPM on natural aspiration
-        var flowNorm = MassFlow / chargeFull;
+        var flowNorm = MassFlow / ratedCharge;
 
         // the intake warms up inflowing air though compression and/or heat exchange
         IntakeTempK = IntakeTemperature(ambient, EngineTempK, Charge, flowNorm);
@@ -362,7 +362,7 @@ public sealed class CombustionModel
         // dynamically derive temperature gain based on rated exhaust temperature at load.
         // this makes it easier to alter temperature behaviour of the engine: just say what the rated exhaust gas
         // temperature at exhaust manifold should be, and the rest follows.
-        var tempGainK = (s.RatedExhaustTempK - PhysicsConstants.ReferenceAmbientK) * chargeFull;
+        var tempGainK = (s.RatedExhaustTempK - PhysicsConstants.ReferenceAmbientK) * ratedCharge;
         // late-burned fuel also sends the work it fails to produce into the exhaust
         var exhaustHeatPerStroke = burnedPerStroke + lateBurnedPerStroke * (1f - s.LateBurnWork) * WorkToExhaustRatio;
         var combustionRiseK = tempGainK * exhaustHeatPerStroke * BurnFractionAir / Charge;
@@ -371,7 +371,7 @@ public sealed class CombustionModel
         var gasMeanK = GasMeanTemperature(trappedTemperature, CompressionTempK, combustionRiseK);
         // there is really no need to recompute this every frame, but that requires invalidation when settings change.
         // in practice, it's just a handful of ops * locos / frame, so it's not a big deal to recompute
-        var wallRatio = WallConductanceRatio(chargeFull);
+        var wallRatio = WallConductanceRatio(ratedCharge);
         var wallConductance = rpm > 0f
             ? wallRatio * Mathf.Pow(flowNorm, WoschniChargeExponent)
             : 0f;

@@ -114,7 +114,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
 
         var ambient = AmbientTemperature.Kelvin;
         var unburned = CombustionModel.UnburnedFuel;
-        var flowNorm = CombustionModel.MassFlow / Mathf.Max(1e-4f, CombustionModel.Charger.ChargeAtFullPower);
+        var flowNorm = CombustionModel.MassFlow / Mathf.Max(1e-4f, CombustionModel.Charger.RatedCharge);
         Stack.Tick(Time.deltaTime, firing, unburned, flowNorm, CombustionModel.GasTemperature, ambient);
 
         // TODO: properly attach the combustion model to the simulation graph.

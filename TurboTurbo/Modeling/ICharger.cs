@@ -15,7 +15,7 @@ public interface ICharger
     /// Rated charge at full power. This is a theoretical number intended for calibration; charge under actual simulation
     /// circumstances may deviate from this.
     /// </summary>
-    float ChargeAtFullPower { get; }
+    float RatedCharge { get; }
 
     /// <summary>
     /// Effective compression ratio of the cylinders, counted from the moment the intake closes.

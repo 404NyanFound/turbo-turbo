@@ -306,7 +306,7 @@ namespace TurboTurboTests
                 model.Tick(0.1f, engineOn: true);
             }
 
-            model.Charge.ShouldBe(model.Charger.ChargeAtFullPower, tolerance: 0.01f);
+            model.Charge.ShouldBe(model.Charger.RatedCharge, tolerance: 0.01f);
             var manifoldK = model.GasTemperature + model.TurbineTemperatureDropK;
             manifoldK.ShouldBe(CombustionModel.Settings.DefaultRatedExhaustTempK, tolerance: 0.5f);
         }
@@ -337,7 +337,7 @@ namespace TurboTurboTests
             // manifold 760 K expanded across the charge pressure ratio, gamma = 1.4 -> exponent 0.2857,
             // by a turbine that extracts 78% of the isentropic drop
             var expectedDrop = CombustionModel.Settings.DefaultRatedExhaustTempK * 0.78f *
-                               (1f - (float)Math.Pow(model.Charger.ChargeAtFullPower, -0.28571));
+                               (1f - (float)Math.Pow(model.Charger.RatedCharge, -0.28571));
             model.TurbineTemperatureDropK.ShouldBe(expectedDrop, tolerance: 0.5f);
         }
 

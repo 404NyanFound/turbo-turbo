@@ -330,7 +330,7 @@ namespace TestBench
             Engine.Tick(BenchCommon.Dt, engineOn: true);
 
             var unburned = Engine.UnburnedFuel;
-            var flow = Mathf.Clamp01(Engine.MassFlow / Mathf.Max(1e-4f, Engine.Charger.ChargeAtFullPower));
+            var flow = Mathf.Clamp01(Engine.MassFlow / Mathf.Max(1e-4f, Engine.Charger.RatedCharge));
             Stack.Tick(BenchCommon.Dt, engineOn: true, unburned, flow, Engine.GasTemperature, _ambientK);
 
             Smoke.Update(Engine.Lambda, Engine.RpmNorm, Engine.ExhaustEnergy, engineOn: true, BenchCommon.Dt,
