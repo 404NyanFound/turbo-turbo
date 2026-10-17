@@ -35,10 +35,6 @@ internal static class SmokeEmitterSection
             0f, 1f, true, () => f.tuning.startSizeVariance, v => { foreach (var s in smokes) s.tuning.startSizeVariance = v; }, TweakGrade.Basic);
 
         // Developer-grade: some of these are better suited to global settings, but they live here for now.
-        section.AddFloat("Min rate", "Emission rate [p/s] at zero load.",
-            0f, 60f, false, () => f.tuning.idleEmissionRate, v => { foreach (var s in smokes) s.tuning.idleEmissionRate = v; }, TweakGrade.Developer);
-        section.AddFloat("Max rate", "Emission rate [p/s] at full load.",
-            0f, 150f, false, () => f.tuning.fullEmissionRate, v => { foreach (var s in smokes) s.tuning.fullEmissionRate = v; }, TweakGrade.Developer);
         section.AddFloat("Drag", "Strength of air drag on the particles.",
             0f, 3f, true, () => f.tuning.drag, v => { foreach (var s in smokes) s.tuning.drag = v; }, TweakGrade.Developer);
         section.AddFloat("Buoyancy", "Constant upward drift [m/s].",

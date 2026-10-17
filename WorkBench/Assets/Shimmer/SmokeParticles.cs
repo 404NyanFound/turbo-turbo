@@ -42,6 +42,15 @@ namespace TurboTurbo.WorkBench
         /// </summary>
         public static float Lifetime = DefaultLifetime;
 
+        public const float DefaultIdleEmissionRate = 15f;
+        public const float DefaultFullEmissionRate = 75f;
+
+        /// <summary>Emission rate [p/s] at zero exhaust energy, applied to every emitter.</summary>
+        public static float IdleEmissionRate = DefaultIdleEmissionRate;
+
+        /// <summary>Emission rate [p/s] at full exhaust energy, applied to every emitter.</summary>
+        public static float FullEmissionRate = DefaultFullEmissionRate;
+
         /// <summary>Soft shoulder applied to the atlas before the shadow ramp. Smaller = stronger lift.</summary>
         public static float TexKnee = 0.15f;
 
@@ -64,8 +73,6 @@ namespace TurboTurbo.WorkBench
 
         public sealed class Settings
         {
-            internal const float DefaultIdleEmissionRate = 15f;
-            internal const float DefaultFullEmissionRate = 75f;
             internal const float DefaultStartSize = 0.39f;
             internal const float DefaultStartSizeVariance = 0.29f;
             internal const float DefaultPlumeSize = 6.4f;
@@ -83,10 +90,6 @@ namespace TurboTurbo.WorkBench
             internal const float DefaultTurbulenceScrollSpeed = 0f;
             internal const float DefaultLightSaturation = 0.35f;
             internal const float DefaultMaxShadowFloor = 0.65f;
-
-            public float idleEmissionRate = DefaultIdleEmissionRate;
-
-            public float fullEmissionRate = DefaultFullEmissionRate;
 
             public float startSize = DefaultStartSize;
 
@@ -128,8 +131,6 @@ namespace TurboTurbo.WorkBench
 
             public Settings(Settings other)
             {
-                idleEmissionRate = other.idleEmissionRate;
-                fullEmissionRate = other.fullEmissionRate;
                 startSize = other.startSize;
                 startSizeVariance = other.startSizeVariance;
                 plumeSize = other.plumeSize;
@@ -231,7 +232,7 @@ namespace TurboTurbo.WorkBench
             }
 
             main.maxParticles = ParticleBudget.Capacity(
-                Mathf.Max(s.idleEmissionRate, s.fullEmissionRate),
+                Mathf.Max(IdleEmissionRate, FullEmissionRate),
                 Lifetime * (1f + LifetimeJitter));
             main.gravityModifier = 0f;
 
@@ -331,7 +332,7 @@ namespace TurboTurbo.WorkBench
         // upper bound of per-particle density, so the encoded value stays in [0,1]
         private float ComputeDensityScale()
         {
-            var minRate = Mathf.Min(tuning.idleEmissionRate, tuning.fullEmissionRate);
+            var minRate = Mathf.Min(IdleEmissionRate, FullEmissionRate);
             return Mathf.Max(1e-4f, Model.MaxParticulateMass / Mathf.Max(1f, minRate));
         }
 
@@ -395,7 +396,7 @@ namespace TurboTurbo.WorkBench
             var noise = _ps.noise;
             noise.strength = Mathf.Lerp(s.turbulenceStrengthMin, s.turbulenceStrengthMax, speedNorm);
 
-            var emissionRate = Mathf.Lerp(s.idleEmissionRate, s.fullEmissionRate, exhaustEnergy);
+            var emissionRate = Mathf.Lerp(IdleEmissionRate, FullEmissionRate, exhaustEnergy);
             if (engineOn)
             {
                 _emitAccumulator += emissionRate * dt;

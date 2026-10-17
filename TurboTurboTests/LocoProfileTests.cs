@@ -409,7 +409,7 @@ namespace TurboTurboTests
 
             xml.ShouldContain("<SmokeEmitter");
             xml.ShouldContain("<ShimmerEmitter");
-            xml.ShouldNotContain("idleEmissionRate");
+            xml.ShouldNotContain("startSize");
             xml.ShouldNotContain("turbulenceStrengthMin");
             xml.ShouldNotContain("turbulenceStrengthMax");
             xml.ShouldNotContain("idleRate");
@@ -470,7 +470,7 @@ namespace TurboTurboTests
                 ColorOilBurn = new Color(0f, 1f, 0f, 1f),
                 SootMaxAlpha = 0.5f,
             };
-            profile.SmokeEmitter = new SmokeParticles.Settings { idleEmissionRate = 11f, drag = 0.9f };
+            profile.SmokeEmitter = new SmokeParticles.Settings { startSize = 0.5f, drag = 0.9f };
             profile.ShimmerEmitter = new ShimmerParticles.Settings { strength = 0.02f, yOffset = 0.3f };
             profile.Velocity = new ExhaustVelocitySettings { ExhaustVelocityCoefficient = 3.25f };
             profile.Combustion = new CombustionModel.Settings
@@ -493,7 +493,7 @@ namespace TurboTurboTests
             restored.Smoke.Density.ShouldBe(90f);
             restored.Smoke.ColorOilBurn.ShouldBe(new Color(0f, 1f, 0f, 1f));
             restored.Smoke.SootMaxAlpha.ShouldBe(0.5f);
-            restored.SmokeEmitter.idleEmissionRate.ShouldBe(11f);
+            restored.SmokeEmitter.startSize.ShouldBe(0.5f);
             restored.SmokeEmitter.drag.ShouldBe(0.9f);
             restored.ShimmerEmitter.strength.ShouldBe(0.02f);
             restored.ShimmerEmitter.yOffset.ShouldBe(0.3f);

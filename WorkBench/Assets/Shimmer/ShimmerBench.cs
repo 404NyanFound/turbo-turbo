@@ -106,8 +106,8 @@ namespace TurboTurbo.WorkBench
                 _smokeBench.shader = Shader.Find("TurboTurbo/Smoke");
                 _smokeBench.atlas = vanillaAtlas;
                 _smokeBench.windFrame = _windFrame;
-                _smokeBench.tuning.idleEmissionRate = idleEmissionRate;
-                _smokeBench.tuning.fullEmissionRate = fullEmissionRate;
+                SmokeParticles.IdleEmissionRate = idleEmissionRate;
+                SmokeParticles.FullEmissionRate = fullEmissionRate;
                 _smokeBench.Configure();
                 _lastIdleRate = idleEmissionRate;
                 _lastFullRate = fullEmissionRate;
@@ -124,8 +124,8 @@ namespace TurboTurbo.WorkBench
                 if (!Mathf.Approximately(_lastIdleRate, idleEmissionRate)
                     || !Mathf.Approximately(_lastFullRate, fullEmissionRate))
                 {
-                    _smokeBench.tuning.idleEmissionRate = idleEmissionRate;
-                    _smokeBench.tuning.fullEmissionRate = fullEmissionRate;
+                    SmokeParticles.IdleEmissionRate = idleEmissionRate;
+                    SmokeParticles.FullEmissionRate = fullEmissionRate;
                     _smokeBench.Configure();
                     _lastIdleRate = idleEmissionRate;
                     _lastFullRate = fullEmissionRate;

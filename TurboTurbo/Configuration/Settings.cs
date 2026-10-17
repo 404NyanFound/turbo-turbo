@@ -23,6 +23,12 @@ public class Settings : UnityModManager.ModSettings
     /// <summary>Nominal smoke particle lifetime [s].</summary>
     public float SmokeLifetime = SmokeParticles.DefaultLifetime;
 
+    /// <summary>Smoke emission rate [p/s] at zero exhaust energy.</summary>
+    public float SmokeIdleEmissionRate = SmokeParticles.DefaultIdleEmissionRate;
+
+    /// <summary>Smoke emission rate [p/s] at full exhaust energy.</summary>
+    public float SmokeFullEmissionRate = SmokeParticles.DefaultFullEmissionRate;
+
     public List<LocoProfileXml> LocoProfiles = new();
 
     public bool IsAuthoring => AuthoringMode && !string.IsNullOrEmpty(AuthoringTargetModId);

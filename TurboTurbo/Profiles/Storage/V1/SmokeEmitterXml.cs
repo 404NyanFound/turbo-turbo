@@ -4,8 +4,6 @@ namespace TurboTurbo.Profiles.Storage.V1;
 
 public sealed class SmokeEmitterXml
 {
-    internal const float DefaultIdleEmissionRate = 15f;
-    internal const float DefaultFullEmissionRate = 75f;
     internal const float DefaultStartSize = 0.39f;
     internal const float DefaultStartSizeVariance = 0.29f;
     internal const float DefaultPlumeSize = 6.4f;
@@ -23,12 +21,6 @@ public sealed class SmokeEmitterXml
     internal const float DefaultTurbulenceScrollSpeed = 0f;
     internal const float DefaultLightSaturation = 0.35f;
     internal const float DefaultMaxShadowFloor = 0.65f;
-
-    [DefaultValue(DefaultIdleEmissionRate)]
-    public float idleEmissionRate = DefaultIdleEmissionRate;
-
-    [DefaultValue(DefaultFullEmissionRate)]
-    public float fullEmissionRate = DefaultFullEmissionRate;
 
     [DefaultValue(DefaultStartSize)]
     public float startSize = DefaultStartSize;

@@ -163,8 +163,6 @@ internal static class ProfileMapper
     private static SmokeParticles.Settings ToRuntime(SmokeEmitterXml xml) =>
         xml == null ? null : new SmokeParticles.Settings
         {
-            idleEmissionRate = xml.idleEmissionRate,
-            fullEmissionRate = xml.fullEmissionRate,
             startSize = xml.startSize,
             startSizeVariance = xml.startSizeVariance,
             plumeSize = xml.plumeSize,
@@ -187,8 +185,6 @@ internal static class ProfileMapper
     private static SmokeEmitterXml ToXml(SmokeParticles.Settings settings) =>
         settings == null ? null : new SmokeEmitterXml
         {
-            idleEmissionRate = settings.idleEmissionRate,
-            fullEmissionRate = settings.fullEmissionRate,
             startSize = settings.startSize,
             startSizeVariance = settings.startSizeVariance,
             plumeSize = settings.plumeSize,
