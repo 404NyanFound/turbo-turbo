@@ -4,7 +4,7 @@ using TurboTurbo.Modeling;
 
 using UnityEngine;
 
-namespace TurboTurbo.WorkBench
+namespace TurboTurbo.Effects
 {
     [RequireComponent(typeof(ParticleSystem))]
     public class SmokeParticles : MonoBehaviour

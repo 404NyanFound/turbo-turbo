@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 
 using TurboTurbo.Modeling;
-using TurboTurbo.WorkBench;
 
 using UnityEngine;
 
-namespace TurboTurbo
+namespace TurboTurbo.Effects
 {
     [RequireComponent(typeof(ParticleSystem))]
     public class ShimmerParticles : MonoBehaviour

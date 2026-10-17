@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.turboturbo.shared": {
+      "version": "file:../../Shared",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "1.14.18",
       "depth": 0,

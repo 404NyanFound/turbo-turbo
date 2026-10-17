@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TurboTurbo.WorkBench
+namespace TurboTurbo.Effects
 {
     public struct ExhaustSignalSet
     {

@@ -31,23 +31,10 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <!-- Shared source files -->
+  <!-- These files are shared with the WorkBench, so they are linked from a separate
+  folder, which allows us to define a Unity package for them. -->
   <ItemGroup>
-    <Compile Include="..\WorkBench\Assets\Shimmer\ExhaustSmokeModel.cs">
-      <Link>Modeling\ExhaustSmokeModel.cs</Link>
-    </Compile>
-    <Compile Include="..\WorkBench\Assets\Shimmer\ExhaustSignalSet.cs">
-      <Link>Effects\ExhaustSignalSet.cs</Link>
-    </Compile>
-    <Compile Include="..\WorkBench\Assets\Shimmer\ShimmerParticles.cs">
-      <Link>Effects\ShimmerParticles.cs</Link>
-    </Compile>
-    <Compile Include="..\WorkBench\Assets\Shimmer\SmokeParticles.cs">
-      <Link>Effects\SmokeParticles.cs</Link>
-    </Compile>
-    <Compile Include="..\WorkBench\Assets\Shimmer\WindFrame.cs">
-      <Link>Effects\WindFrame.cs</Link>
-    </Compile>
+    <Compile Include="..\Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!-- Unity + framework assemblies -->

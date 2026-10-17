@@ -7,8 +7,8 @@ using Spectre.Console;
 using Spectre.Console.Rendering;
 
 using TurboTurbo;
+using TurboTurbo.Effects;
 using TurboTurbo.Modeling;
-using TurboTurbo.WorkBench;
 
 using UnityEngine;
 

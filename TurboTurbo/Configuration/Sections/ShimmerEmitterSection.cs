@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using TurboTurbo.Effects;
 using TurboTurbo.Runtime;
 
 namespace TurboTurbo.Configuration.Sections;

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace TurboTurbo.WorkBench
+namespace TurboTurbo.Effects
 {
     /// <summary>
     /// A reference frame that follows the ambient wind. Intended for use with particle systems that should be affected
