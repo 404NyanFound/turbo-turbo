@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using JetBrains.Annotations;
 
 using TurboTurbo.Profiles;
-using TurboTurbo.Profiles.Storage.V1;
+using TurboTurbo.Profiles.Storage;
 using TurboTurbo.WorkBench;
 
 using UnityModManagerNet;
 
 namespace TurboTurbo.Configuration;
 
+[UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public class Settings : UnityModManager.ModSettings
 {
     public KeyBinding ToggleDevPanel = new KeyBinding();
@@ -29,7 +30,7 @@ public class Settings : UnityModManager.ModSettings
     /// <summary>Smoke emission rate [p/s] at full exhaust energy.</summary>
     public float SmokeFullEmissionRate = SmokeParticles.DefaultFullEmissionRate;
 
-    public List<LocoProfileXml> LocoProfiles = new();
+    public StoredProfiles LocoProfiles = new();
 
     public bool IsAuthoring => AuthoringMode && !string.IsNullOrEmpty(AuthoringTargetModId);
 

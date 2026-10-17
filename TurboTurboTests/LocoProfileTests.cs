@@ -8,7 +8,7 @@ using TurboTurbo.Configuration;
 using TurboTurbo.Modeling;
 using TurboTurbo.Profiles;
 using TurboTurbo.Profiles.Storage;
-using TurboTurbo.Profiles.Storage.V1;
+using TurboTurbo.Profiles.Storage.Current;
 using TurboTurbo.Setup;
 using TurboTurbo.WorkBench;
 
@@ -98,15 +98,6 @@ namespace TurboTurboTests
             profile.Validate().ShouldNotBeNull();
 
             profile.Exhausts[0].Offset = new Vector3(0f, float.PositiveInfinity, 0f);
-
-            profile.Validate().ShouldNotBeNull();
-        }
-
-        [Fact]
-        public void Validate_UnknownVersion_Fails()
-        {
-            var profile = ValidProfile();
-            profile.Version = LocoProfile.CurrentVersion + 1;
 
             profile.Validate().ShouldNotBeNull();
         }
@@ -214,7 +205,7 @@ namespace TurboTurboTests
                 Exhausts = [new ExhaustXml { Kind = ExhaustKind.Replacement, Path = "ExhaustSmoke" }],
             };
 
-            var loaded = ProfileLoader.LoadUserProfiles([sparse]);
+            var loaded = ProfileLoader.LoadUserProfiles([LocoProfileCodec.ToElement(sparse)]);
 
             var completed = loaded["sparse"];
             completed.LiveryId.ShouldBe("sparse");
@@ -240,7 +231,7 @@ namespace TurboTurboTests
                 Exhausts = [new ExhaustXml { Kind = ExhaustKind.Replacement, Path = "ExhaustSmoke" }],
             };
 
-            var completed = ProfileLoader.LoadUserProfiles([sparse])["sparse-na"];
+            var completed = ProfileLoader.LoadUserProfiles([LocoProfileCodec.ToElement(sparse)])["sparse-na"];
 
             completed.Atmospheric.ShouldNotBeNull();
             completed.TurboCharger.ShouldBeNull();
@@ -570,7 +561,7 @@ namespace TurboTurboTests
             updated.Enabled = false;
             ProfileService.User.Save(updated).ShouldBeNull();
 
-            settings.LocoProfiles.Count.ShouldBe(1);
+            settings.LocoProfiles.Items.Count.ShouldBe(1);
             ProfileService.User.Get("dup").Enabled.ShouldBeFalse();
         }
 
@@ -596,7 +587,7 @@ namespace TurboTurboTests
             ProfileService.User.Get("toggle").Enabled.ShouldBeFalse();
 
             // the registry aliases the stored profile, so the flag must reach settings too
-            settings.LocoProfiles[0].Enabled.ShouldBeFalse();
+            ((bool)settings.LocoProfiles.Items[0].Element("Enabled")).ShouldBeFalse();
 
             ProfileService.User.SetEnabled("missing", false).ShouldBeFalse();
         }
@@ -607,8 +598,8 @@ namespace TurboTurboTests
             var settings = new Settings();
             var bad = ValidProfile();
             bad.LiveryId = "";
-            settings.LocoProfiles.Add(ProfileMapper.ToXml(bad));
-            settings.LocoProfiles.Add(ProfileMapper.ToXml(ValidProfile("good")));
+            settings.LocoProfiles.Items.Add(LocoProfileCodec.ToElement(bad));
+            settings.LocoProfiles.Items.Add(LocoProfileCodec.ToElement(ValidProfile("good")));
 
             SettingsStore.Current = settings;
             ProfileService.User.Load(SettingsStore.Current);

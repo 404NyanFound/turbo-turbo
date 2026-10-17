@@ -6,7 +6,7 @@ using Shouldly;
 
 using TurboTurbo.Profiles;
 using TurboTurbo.Profiles.Storage;
-using TurboTurbo.Profiles.Storage.V1;
+using TurboTurbo.Profiles.Storage.Current;
 
 using Xunit;
 
@@ -91,12 +91,30 @@ namespace TurboTurboTests
         }
 
         [Fact]
+        public void LoadModProfiles_SkipsUnknownVersion()
+        {
+            var unknown = $"<Version>{ProfileSchema.CurrentVersion + 1}</Version>";
+            var mods = new List<ModSource> { Mod("mod-a", ValidXml.Replace("<Version>1</Version>", unknown)) };
+
+            LoadModProfiles(mods, "own").ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void LoadUserProfiles_SkipsUnknownVersion()
+        {
+            var unknown = ValidLocoProfile();
+            unknown.Version = ProfileSchema.CurrentVersion + 1;
+
+            LoadUserProfiles([LocoProfileCodec.ToElement(unknown)]).ShouldBeEmpty();
+        }
+
+        [Fact]
         public void LoadUserProfiles_LoadsValidAndSkipsInvalid()
         {
             var bad = ValidLocoProfile();
             bad.LiveryId = "";
 
-            var loaded = LoadUserProfiles([ValidLocoProfile(), bad, null]);
+            var loaded = LoadUserProfiles([LocoProfileCodec.ToElement(ValidLocoProfile()), LocoProfileCodec.ToElement(bad), null]);
 
             loaded.Count.ShouldBe(1);
             loaded["test-livery"].LiveryId.ShouldBe("test-livery");

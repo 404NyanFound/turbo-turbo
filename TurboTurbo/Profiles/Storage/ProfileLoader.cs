@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 
-using TurboTurbo.Profiles.Storage.V1;
+using TurboTurbo.Profiles.Storage.Current;
 
 namespace TurboTurbo.Profiles.Storage;
 
@@ -19,9 +20,9 @@ internal static class ProfileLoader
         var loaded = new Dictionary<string, ModProfile>();
         foreach (var mod in mods)
         {
-            var config = LoadConfig(mod, ownId);
-            if (config == null) continue;
-            MergeInto(loaded, mod, config);
+            var profiles = LoadConfig(mod, ownId);
+            if (profiles == null) continue;
+            MergeInto(loaded, mod, profiles);
         }
 
         Log.Info($"loaded {loaded.Count} loco profiles from mods");
@@ -32,24 +33,23 @@ internal static class ProfileLoader
     internal static Dictionary<string, ModProfile> LoadModProfile(ModSource mod, string ownId)
     {
         var loaded = new Dictionary<string, ModProfile>();
-        var config = LoadConfig(mod, ownId);
-        if (config != null) MergeInto(loaded, mod, config);
+        var profiles = LoadConfig(mod, ownId);
+        if (profiles != null) MergeInto(loaded, mod, profiles);
         return loaded;
     }
 
-    internal static Dictionary<string, LocoProfile> LoadUserProfiles(IEnumerable<LocoProfileXml> stored)
+    internal static Dictionary<string, LocoProfile> LoadUserProfiles(IEnumerable<XElement> stored)
     {
         var loaded = new Dictionary<string, LocoProfile>();
         if (stored == null) return loaded;
-        foreach (var xml in stored)
+        foreach (var element in stored)
         {
-            if (xml == null) continue;
+            if (element == null) continue;
 
-            var profile = ProfileMapper.ToRuntime(ProfileMigrator.Migrate(xml));
-            var error = profile.Normalize();
+            var error = Import(element, out var profile);
             if (error != null)
             {
-                Log.Warn($"skipping loco profile '{profile.LiveryId}': {error}");
+                Log.Warn($"skipping loco profile '{LocoProfileCodec.LiveryId(element)}': {error}");
                 continue;
             }
 
@@ -60,36 +60,30 @@ internal static class ProfileLoader
         return loaded;
     }
 
-    private static TurboConfigXml LoadConfig(ModSource mod, string ownId)
+    private static List<XElement> LoadConfig(ModSource mod, string ownId)
     {
         if (mod.Id == ownId) return null;
         if (!mod.Enabled) return null;
-        var file = Path.Combine(mod.Path, TurboConfigCodec.FileName);
+        var file = TurboConfigCodec.PathIn(mod.Path);
         if (!File.Exists(file)) return null;
-        try
+
+        var document = TurboConfigCodec.Load(file);
+        if (document.Error is { } error)
         {
-            using var stream = File.OpenRead(file);
-            var config = (TurboConfigXml)TurboConfigCodec.Serializer.Deserialize(stream);
-            return config?.LocoProfiles == null ? null : config;
-        }
-        catch (Exception e)
-        {
-            Log.Warn($"skipping malformed TurboConfig.xml in '{mod.ModName}': {e.Message}");
+            Log.Warn($"skipping {TurboConfigCodec.FileName} in '{mod.ModName}': {error}");
             return null;
         }
+        return TurboConfigCodec.Profiles(document.Value);
     }
 
-    private static void MergeInto(Dictionary<string, ModProfile> merged, ModSource source, TurboConfigXml config)
+    private static void MergeInto(Dictionary<string, ModProfile> merged, ModSource source, List<XElement> profiles)
     {
-        foreach (var xml in config.LocoProfiles)
+        foreach (var element in profiles)
         {
-            if (xml == null) continue;
-
-            var profile = ProfileMapper.ToRuntime(ProfileMigrator.Migrate(xml));
-            var error = profile.Normalize();
+            var error = Import(element, out var profile);
             if (error != null)
             {
-                Log.Warn($"skipping loco profile '{profile.LiveryId}' from '{source.ModName}': {error}");
+                Log.Warn($"skipping loco profile '{LocoProfileCodec.LiveryId(element)}' from '{source.ModName}': {error}");
                 continue;
             }
 
@@ -105,5 +99,27 @@ internal static class ProfileLoader
 
             merged[profile.LiveryId] = new ModProfile(profile, source.Id, source.ModName);
         }
+    }
+
+    /// <summary>
+    /// Migrates a stored profile to the current schema and maps it to a normalized runtime profile.
+    /// Returns an error, or null when the profile is usable.
+    /// </summary>
+    private static Error? Import(XElement element, out LocoProfile profile)
+    {
+        profile = null;
+        LocoProfileXml xml;
+        try
+        {
+            xml = LocoProfileCodec.FromElement(ProfileMigrator.Migrate(element));
+        }
+        catch (Exception e)
+        {
+            return new Error($"malformed profile: {e.Message}");
+        }
+        if (xml.Version != ProfileSchema.CurrentVersion) return new Error($"unknown version {xml.Version}");
+
+        profile = ProfileMapper.ToRuntime(xml);
+        return profile.Normalize();
     }
 }

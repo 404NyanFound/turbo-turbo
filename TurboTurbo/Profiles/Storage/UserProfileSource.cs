@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 using TurboTurbo.Configuration;
 
@@ -32,7 +31,7 @@ internal sealed class UserProfileSource : IProfileSource
     public LocoProfile Get(string liveryId) => _profiles.TryGetValue(liveryId, out var profile) ? profile : null;
 
     /// <summary>Reloads the in-memory set from persisted settings.</summary>
-    public void Load(Settings settings) => Replace(ProfileLoader.LoadUserProfiles(settings?.LocoProfiles).Values);
+    public void Load(Settings settings) => Replace(ProfileLoader.LoadUserProfiles(settings?.LocoProfiles?.Items).Values);
 
     /// <summary>Validates, stores, and persists a profile. Returns an error or null.</summary>
     public Error? Save(LocoProfile profile)
@@ -40,12 +39,7 @@ internal sealed class UserProfileSource : IProfileSource
         var error = profile.Normalize();
         if (error != null) return error;
 
-        var stored = SettingsStore.Current.LocoProfiles;
-        var xml = ProfileMapper.ToXml(profile);
-        var index = stored.FindIndex(p => p.LiveryId == profile.LiveryId);
-        if (index >= 0) stored[index] = xml;
-        else stored.Add(xml);
-
+        SettingsStore.Current.LocoProfiles.Put(LocoProfileCodec.ToElement(profile));
         Put(profile);
         SettingsStore.Save();
         return null;
@@ -55,7 +49,7 @@ internal sealed class UserProfileSource : IProfileSource
     public bool DeleteProfile(string liveryId)
     {
         var removed = Remove(liveryId);
-        SettingsStore.Current.LocoProfiles.RemoveAll(p => p.LiveryId == liveryId);
+        SettingsStore.Current.LocoProfiles.Remove(liveryId);
         if (removed) SettingsStore.Save();
         return removed;
     }
@@ -66,8 +60,7 @@ internal sealed class UserProfileSource : IProfileSource
         if (profile == null) return false;
 
         profile.Enabled = enabled;
-        var stored = SettingsStore.Current.LocoProfiles.Find(p => p.LiveryId == liveryId);
-        if (stored != null) stored.Enabled = enabled;
+        SettingsStore.Current.LocoProfiles.Put(LocoProfileCodec.ToElement(profile));
 
         SettingsStore.Save();
         return true;

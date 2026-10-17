@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace TurboTurbo.Profiles.Storage.V1;
+namespace TurboTurbo.Profiles.Storage.Current;
 
 public sealed class SmokeModelXml
 {

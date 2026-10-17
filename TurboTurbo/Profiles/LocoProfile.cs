@@ -14,9 +14,6 @@ namespace TurboTurbo.Profiles;
 /// </summary>
 public sealed class LocoProfile
 {
-    public const int CurrentVersion = 1;
-
-    public int Version { get; set; } = CurrentVersion;
     public string LiveryId { get; set; } = "";
     public bool Enabled { get; set; } = true;
     public List<LocoExhaust> Exhausts { get; set; } = new();
@@ -44,7 +41,6 @@ public sealed class LocoProfile
     {
         return new LocoProfile
         {
-            Version = Version,
             LiveryId = LiveryId,
             Enabled = Enabled,
             ChargerKind = ChargerKind,
@@ -63,7 +59,6 @@ public sealed class LocoProfile
     /// <summary>Structural validation. Returns an error, or null when the profile is usable.</summary>
     internal Error? Validate()
     {
-        if (Version != CurrentVersion) return new Error($"unknown version {Version}");
         if (string.IsNullOrWhiteSpace(LiveryId)) return new Error("LiveryId is required");
         if (Exhausts == null || Exhausts.Count == 0)
             return new Error("at least one exhaust is required");

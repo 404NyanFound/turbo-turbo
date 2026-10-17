@@ -6,15 +6,13 @@ using TurboTurbo.Modeling;
 
 using UnityEngine;
 
-namespace TurboTurbo.Profiles.Storage.V1;
+namespace TurboTurbo.Profiles.Storage.Current;
 
 [XmlRoot("LocoProfile")]
 [XmlType("LocoProfile")]
 public sealed class LocoProfileXml
 {
-    public const int CurrentVersion = 1;
-
-    public int Version { get; set; } = CurrentVersion;
+    public int Version { get; set; } = ProfileSchema.CurrentVersion;
     public string LiveryId { get; set; } = "";
     public bool Enabled { get; set; } = true;
     public List<ExhaustXml> Exhausts { get; set; } = new();

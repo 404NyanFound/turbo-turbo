@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using TurboTurbo.Modeling;
-using TurboTurbo.Profiles.Storage.V1;
+using TurboTurbo.Profiles.Storage.Current;
 using TurboTurbo.WorkBench;
 
 namespace TurboTurbo.Profiles.Storage;
@@ -16,7 +16,6 @@ internal static class ProfileMapper
 
         return new LocoProfile
         {
-            Version = xml.Version,
             LiveryId = xml.LiveryId,
             Enabled = xml.Enabled,
             ChargerKind = xml.ChargerKind,
@@ -38,7 +37,6 @@ internal static class ProfileMapper
 
         return new LocoProfileXml
         {
-            Version = profile.Version,
             LiveryId = profile.LiveryId,
             Enabled = profile.Enabled,
             ChargerKind = profile.ChargerKind,

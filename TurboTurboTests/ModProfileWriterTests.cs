@@ -53,6 +53,18 @@ namespace TurboTurboTests
             loaded.Profile.Exhausts[0].Path.ShouldBe("Engine/ExhaustEngineSmoke");
         }
 
+        [Theory]
+        [InlineData("")]
+        [InlineData("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- profiles go here -->\n")]
+        public void Write_FileWithoutRoot_TreatedAsEmpty(string content)
+        {
+            File.WriteAllText(Path.Combine(_dir, TurboConfigCodec.FileName), content);
+
+            ModProfileWriter.Write(Profile("loco-a", "ExhaustA"), _dir).ShouldBeNull();
+
+            Load("loco-a").Profile.Exhausts[0].Path.ShouldBe("ExhaustA");
+        }
+
         [Fact]
         public void Write_Upserts_PreservingOtherProfiles()
         {

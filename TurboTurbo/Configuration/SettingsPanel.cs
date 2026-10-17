@@ -133,7 +133,7 @@ internal static class SettingsPanel
         if (!string.IsNullOrEmpty(settings.AuthoringTargetModId))
         {
             var file = current != null
-                ? System.IO.Path.Combine(current.Path, TurboConfigCodec.FileName)
+                ? TurboConfigCodec.PathIn(current.Path)
                 : "(target mod unavailable)";
             GUILayout.Label($"Profiles will be saved to {file}", Styles.WrappedLabel);
         }
