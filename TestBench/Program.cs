@@ -17,6 +17,8 @@ app.Configure(config =>
         .WithDescription("Ignition, late burn and unburned fuel bench.");
     config.AddCommand<StackCommand>("stack")
         .WithDescription("Exhaust-stack model bench.");
+    config.AddCommand<SpoolCommand>("spool")
+        .WithDescription("Turbo spool-up after throttle steps.");
     config.AddCommand<SimCommand>("sim")
         .WithDescription("Realtime engine + stack simulation.");
 });

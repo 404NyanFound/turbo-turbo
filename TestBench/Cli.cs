@@ -57,6 +57,27 @@ namespace TestBench
         }
     }
 
+    public sealed class SpoolSettings : CommandSettings
+    {
+        [CommandOption("--once")]
+        [Description("Print the report once and exit instead of opening the interactive screen.")]
+        public bool Once { get; set; }
+
+        [CommandOption("--ramp <SECONDS>")]
+        [Description("Initial time for the engine to accelerate from idle to rated speed.")]
+        [DefaultValue(SpoolBench.Options.DefaultRampS)]
+        public float Ramp { get; set; } = SpoolBench.Options.DefaultRampS;
+    }
+
+    public sealed class SpoolCommand : Command<SpoolSettings>
+    {
+        public override int Execute(CommandContext context, SpoolSettings settings, CancellationToken cancellationToken)
+        {
+            SpoolMode.Run(settings.Once, settings.Ramp);
+            return 0;
+        }
+    }
+
     public sealed class SimSettings : CommandSettings
     {
         [CommandOption("--once")]
