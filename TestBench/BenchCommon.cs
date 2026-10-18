@@ -213,7 +213,7 @@ namespace TestBench
                     })
                     // near-zero spool constants make the charger instantaneous, so the bench measures
                     // pure thermal dynamics with no turbo transient mixed in
-                    : new TurboCharger(new TurboCharger.Settings { TauUp = 0.01f, TauDown = 0.01f, MinSpoolTau = 0.01f });
+                    : new TurboCharger(new TurboCharger.Settings { TauUp = 0.01f, TauDown = 0.01f });
 
                 return new CombustionModel(() => 0f, () => Fuel, () => Rpm, () => AmbientK,
                     charger, copy, new ExhaustVelocitySettings());

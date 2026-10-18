@@ -59,14 +59,6 @@ internal static class ChargerSection
                 "Adjusting this affects available air at full power, and therefore may require you to make a " +
                 "corresponding change to lambda calibration as well.",
                 0f, 2.5f, false, () => t.BoostChargeMultiplier, v => t.BoostChargeMultiplier = v);
-            section.AddFloat("Thermal K",
-                "Thermal feedback strength. Higher values cause quicker boost build-up when overfueling.",
-                0f, 3f, false, () => t.ThermalK, v => t.ThermalK = v);
-            section.AddFloat("Tau up (min)",
-                "Time constant floor, applied when building boost pressure. " +
-                "Puts a lower limit on how much overfueling is able to shorten boost pressure build-up time.\n" +
-                "This is mostly a safeguard and should not be relied on to change engine behaviour.",
-                0.1f, 2f, false, () => t.MinSpoolTau, v => t.MinSpoolTau = v);
             section.AddFloat("Compression ratio",
                 CompressionRatioToolTip,
                 10f, 25f, false, () => t.CompressionRatio, v => t.CompressionRatio = v, TweakGrade.Developer);

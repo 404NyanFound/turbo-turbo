@@ -88,7 +88,7 @@ public sealed class AtmosphericCharger : ICharger
         Charge = settings.EtaPeak;
     }
 
-    public void Tick(float delta, float overfuel, float rpmNorm, float governorNorm,
+    public void Tick(float delta, float rpmNorm, float governorNorm,
         float exhaustEnergy, bool engineOn)
     {
         var s = Tuning;

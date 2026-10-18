@@ -32,7 +32,7 @@ public interface ICharger
     bool Surging { get; }
     float LambdaCalibration { get; }
 
-    void Tick(float delta, float overfuel, float rpmNorm, float governorNorm,
+    void Tick(float delta, float rpmNorm, float governorNorm,
         float exhaustEnergy, bool engineOn);
 
     ICharger Clone();

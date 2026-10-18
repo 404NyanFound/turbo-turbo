@@ -402,7 +402,7 @@ public sealed class CombustionModel
         ExhaustVelocity = _velocity.Calculate(MassFlow, GasDensity);
 
         // charger always lags 1 tick behind the combustion model, as it depends on exhaust 
-        Charger.Tick(delta, Overfuel, rpm, governor, ExhaustEnergy, engineOn);
+        Charger.Tick(delta, rpm, governor, ExhaustEnergy, engineOn);
 
         Boost = Charger.Boost;
         SurgeThisTick = Charger.Surging;

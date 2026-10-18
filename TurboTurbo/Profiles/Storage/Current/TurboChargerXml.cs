@@ -8,8 +8,6 @@ public sealed class TurboChargerXml
     internal const float DefaultBoostChargeMultiplier = 1.125f;
     internal const float DefaultTauUp = 3.0f;
     internal const float DefaultTauDown = 1.5f;
-    internal const float DefaultMinSpoolTau = 0.5f;
-    internal const float DefaultThermalK = 0.8f;
     internal const float DefaultSurgeRateThreshold = 15f;
     internal const float DefaultCompressionRatio = 13f;
     internal const float DefaultIntakeNtu = 1f;
@@ -25,12 +23,6 @@ public sealed class TurboChargerXml
 
     [DefaultValue(DefaultTauDown)]
     public float TauDown { get; set; } = DefaultTauDown;
-
-    [DefaultValue(DefaultMinSpoolTau)]
-    public float MinSpoolTau { get; set; } = DefaultMinSpoolTau;
-
-    [DefaultValue(DefaultThermalK)]
-    public float ThermalK { get; set; } = DefaultThermalK;
 
     [DefaultValue(DefaultSurgeRateThreshold)]
     public float SurgeRateThreshold { get; set; } = DefaultSurgeRateThreshold;

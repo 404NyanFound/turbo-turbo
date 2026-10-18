@@ -451,7 +451,7 @@ namespace TurboTurboTests
             {
                 LambdaCalibration = 1.7f,
                 TauUp = 4f,
-                ThermalK = 1.1f,
+                TauDown = 2.5f,
                 CompressionRatio = 18f,
                 IntakeNtu = 0.15f,
             };
@@ -478,7 +478,7 @@ namespace TurboTurboTests
 
             restored.TurboCharger.LambdaCalibration.ShouldBe(1.7f);
             restored.TurboCharger.TauUp.ShouldBe(4f);
-            restored.TurboCharger.ThermalK.ShouldBe(1.1f);
+            restored.TurboCharger.TauDown.ShouldBe(2.5f);
             restored.TurboCharger.CompressionRatio.ShouldBe(18f);
             restored.TurboCharger.IntakeNtu.ShouldBe(0.15f);
             restored.Smoke.Density.ShouldBe(90f);

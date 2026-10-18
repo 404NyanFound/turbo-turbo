@@ -102,28 +102,13 @@ namespace TurboTurboTests
         {
             var model = CreateModel();
 
-            // clean partial load: fuel per stroke 0.4, below charge/calibration
-            // so overfuel 0, tau = TauUp = 3, delta 1s:
+            // clean partial load: fuel per stroke 0.4, tau = TauUp = 3, delta 1s:
             // boost = 0.4 x (1 - e^(-1/3)) = 0.1134
             _fuelNorm = 0.4f;
             _rpmNorm = 1f;
             model.Tick(1f, engineOn: true);
 
             model.Boost.ShouldBe(0.4f * (1f - (float)Math.Exp(-1f / 3f)), tolerance: 0.001f);
-        }
-
-        [Fact]
-        public void Boost_ThermalFeedback_ShortensSpool_UnderOverfuel()
-        {
-            var model = CreateModel();
-
-            _fuelNorm = 1f;
-            _rpmNorm = 1f;
-            model.Tick(1f, engineOn: true);
-
-            var tau = TurboCharger.Settings.DefaultTauUp
-                / (1f + TurboCharger.Settings.DefaultThermalK * model.Overfuel);
-            model.Boost.ShouldBe(model.ExhaustEnergy * (1f - (float)Math.Exp(-1f / tau)), tolerance: 0.001f);
         }
 
         [Fact]
