@@ -55,6 +55,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
     private Logger _log;
     private bool _simBound;
     private bool _loggedNoSim;
+    private bool _tracksAmbient;
 
     private SimController _simController;
     private DieselEngineBinding _engine;
@@ -107,12 +108,24 @@ internal sealed class EngineSimulationHost : MonoBehaviour
 
         var engineOn = _engine.EngineRunning;
         var cranking = !engineOn && _engine.Cranking;
-        CombustionModel.Tick(Time.deltaTime, engineOn, cranking);
 
         // the model fuels the engine while cranking, so the exhaust behaves as if it is running
         var firing = engineOn || cranking;
 
         var ambient = AmbientTemperature.Kelvin;
+
+        // if the engine has never fired, make it follow the ambient temperature directly, without thermal lag.
+        // this is required mainly because on load, Seasons initialises after locomotives have already spawned,
+        // so they tend to start out on the wrong temperature. it also smooths out some wrinkles in a few other
+        // edge cases.
+        if (firing) _tracksAmbient = false;
+        if (_tracksAmbient)
+        {
+            ApplyTemperaturesK(ambient);
+        }
+
+        CombustionModel.Tick(Time.deltaTime, engineOn, cranking);
+
         var unburned = CombustionModel.UnburnedFuel;
         var flowNorm = CombustionModel.MassFlow / Mathf.Max(1e-4f, CombustionModel.Charger.RatedCharge);
         Stack.Tick(Time.deltaTime, firing, unburned, flowNorm, CombustionModel.GasTemperature, ambient);
@@ -135,6 +148,12 @@ internal sealed class EngineSimulationHost : MonoBehaviour
     public void SetTemperaturesK(float kelvin)
     {
         if (!Bound) return;
+        _tracksAmbient = false;
+        ApplyTemperaturesK(kelvin);
+    }
+
+    private void ApplyTemperaturesK(float kelvin)
+    {
         CombustionModel.SetTemperatureK(kelvin);
         Stack.SetTemperatureK(kelvin);
     }
@@ -203,6 +222,7 @@ internal sealed class EngineSimulationHost : MonoBehaviour
             initialTemperatureK);
 
         Stack = new StackModel(Profile.Stack, AmbientTemperature.Kelvin);
+        _tracksAmbient = !_engine.EngineRunning;
 
         _log.Info($"combustion bound (throttle: {_engine.ThrottlePort.id}, " +
                      $"fuel: {DieselEngineBinding.DescribePort(_engine.FuelPort)})");
