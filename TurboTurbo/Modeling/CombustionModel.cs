@@ -337,8 +337,9 @@ public sealed class CombustionModel
         var lateShare = missed * (1f - s.QuenchFraction);
         WorkEfficiency = BurnFractionTemp + lateShare * s.LateBurnWork;
 
-        // a running engine's governor opens the rack to make up for the lost work, until the rack runs out.
-        // while cranking, the engine isn't producing power yet, so the injected amount is fixed.
+        // this is the bit that DV's governor would fix for us if we were to feed limited torque back into the game.
+        // since we currently don't do this, we will pretend that more fuel is injected if work efficiency falls, so
+        // that the effects match what the engine should be doing.
         var injectedPerStroke = cranking
             ? fuelPerStroke
             : Mathf.Max(fuelPerStroke, Mathf.Min(1f, fuelPerStroke / Mathf.Max(0.01f, WorkEfficiency)));
@@ -355,7 +356,8 @@ public sealed class CombustionModel
 
         // heavy overfueling reduces combustion efficiency.
         // simplified model for now; in reality, burn fraction already starts dropping before lambda reaches 1, as
-        // non-perfect mixing causes local rich pockets to start to form in the cylinder even while global lambda is still lean
+        // non-perfect mixing causes local rich pockets to start to form in the cylinder even while global lambda is
+        // still lean. we do not have a way to model this yet.
         BurnFractionAir = Mathf.Min(1f, Lambda);
         BurnFraction = BurnFractionAir * BurnFractionTemp;
 
@@ -382,13 +384,13 @@ public sealed class CombustionModel
         ThermostatOpen = MathExt.Smoothstep(Settings.ThermostatOpenK, Settings.ThermostatFullOpenK, EngineTempK);
         var cooldownTau = Mathf.Lerp(s.TauCooldownClosed, s.TauCooldownOpen, ThermostatOpen);
 
-        // the hot chamber warms up the block, heat flows out of the block into the environment
+        // the hot chamber warms up the block; heat flows out of the block into the environment
         var engineTau = (s.TauEngine * cooldownTau) / (s.TauEngine + cooldownTau);
         var engineTarget = (ChamberTempK * cooldownTau + ambient * s.TauEngine)
                            / (s.TauEngine + cooldownTau);
         EngineTempK += (engineTarget - EngineTempK) * (1f - Mathf.Exp(-delta / engineTau));
 
-        // this becomes the next tick's residual gas temperature
+        // hot exhaust gas drives the turbine
         ManifoldTempK = ambient + combustionRiseK;
         var turbinePressureRatio = Mathf.Max(1f, Charge);
         TurbineTemperatureDropK = ManifoldTempK * TurbineEfficiency *
@@ -399,6 +401,7 @@ public sealed class CombustionModel
         ExhaustEnergy = MassFlow * (ManifoldTempK - ambient) / tempGainK;
         ExhaustVelocity = _velocity.Calculate(MassFlow, GasDensity);
 
+        // charger always lags 1 tick behind the combustion model, as it depends on exhaust 
         Charger.Tick(delta, Overfuel, rpm, governor, ExhaustEnergy, engineOn);
 
         Boost = Charger.Boost;
