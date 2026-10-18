@@ -1,3 +1,52 @@
+## v1.1.0
+
+### Added
+- The simulation now includes a detailed thermal model. Combustion warms up the
+  surfaces inside the cylinders, which then warm up the engine block.
+- Unburned fuel is now simulated alongside partially burned fuel (soot). Unlike
+  soot, unburned fuel leaves the engine as vapour, turning into white smoke.
+- Added ignition efficiency calculations, which depend on temperature and
+  compression ratios. This together with unburned fuel simulation results in
+  realistic cold-start behaviour.
+- To make the most of the cold starting effects, integration with DV Seasons has
+  been added. This is optional, but with Seasons installed, its ambient
+  temperature simulation will be used to determine engine temperatures.
+- Without Seasons installed, TurboTurbo falls back to its own, simpler, ambient
+  temperature calculations that vary only based on time of day and weather.
+- The Seasons integration can also be disabled via a toggle in the settings
+  menu.
+- Added a gentle wind that randomly changes over time. Wind picks up the smoke
+  causing it to drift away slowly.
+- With Seasons installed, during a blizzard, smoke flies away very rapidly.
+
+### Changed
+- Smoke now fades in slightly more quickly after leaving the exhaust, so there
+  is less of a gap between the smoke plume and exhaust opening.
+- Exhaust velocity now derives directly from exhaust gas flow rate and density.
+- The turbocharger is now powered by actually simulating the extraction of heat
+  from the exhaust gas flow.
+- Reworked wet stack simulation to make use of exhaust gas temperature. When
+  fuel vapour is present and the stack is cold, the vapour can condense. When
+  the stack warms up, condensed fuel starts to evaporate.
+- Improved colour blending in the smoke shader, so that light smoke looks
+  better.
+- Added slight turbulence to the smoke at standstill.
+- Smoke is now emitted while the engine starter runs. This will generally be
+  white smoke as misfires are still common at this point.
+- Smoke particles now animate faster, and at a fixed frame rate, no longer
+  dependent on particle lifetime.
+- Improved performance of the lighting calculations in the smoke shader.
+- Smoke particle growth rate is now independent of total lifetime. Lifetime now
+  purely affects how long a particle remains on screen.
+- Improved the fading of large particles when clipping through geometry,
+  further softening the edges on large particles that partially intersect other
+  objects.
+- New configuration file version. The old version is still supported.
+- Temporarily raised the draw order of the smoke and shimmer shaders, so they
+  draw over the ice effect in Seasons, which draws a bit too late. Will be
+  reverted when it is fixed in Seasons.
+- Smoke now fades away in fog.
+
 ## v1.0.0
 
 ### Added
