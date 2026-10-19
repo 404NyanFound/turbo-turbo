@@ -24,3 +24,13 @@ import the generated `GameDir.props`.
   builds the `turboturbo_assets` bundle. Shader changes require rebuilding it
   from the editor via the `TurboTurbo/Build and Deploy` menu
 - **Packaging:** `build.ps1` creates a release package and writes it to `./out`
+
+### Release steps
+
+Manual for now.
+
+1. Update `repository.json` with the new version
+2. Commit as `Release vx.x.x`
+3. Run `build.ps1`
+4. Create GH release and upload the file
+5. Upload the file to Nexus
