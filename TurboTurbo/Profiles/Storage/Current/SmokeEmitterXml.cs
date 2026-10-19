@@ -12,7 +12,6 @@ public sealed class SmokeEmitterXml
     internal const float DefaultDrag = 0.6f;
     internal const float DefaultAngularVelocityMax = 20f;
     internal const float DefaultSpeedNormMax = 15f;
-    internal const float DefaultSpeedLifetimeScale = 0.3f;
     internal const float DefaultSpeedGrowthScale = 2.2f;
     internal const float DefaultSpeedJitter = 0.5f;
     internal const float DefaultTurbulenceStrengthMin = 0.125f;
@@ -45,9 +44,6 @@ public sealed class SmokeEmitterXml
 
     [DefaultValue(DefaultSpeedNormMax)]
     public float speedNormMax = DefaultSpeedNormMax;
-
-    [DefaultValue(DefaultSpeedLifetimeScale)]
-    public float speedLifetimeScale = DefaultSpeedLifetimeScale;
 
     [DefaultValue(DefaultSpeedGrowthScale)]
     public float speedGrowthScale = DefaultSpeedGrowthScale;

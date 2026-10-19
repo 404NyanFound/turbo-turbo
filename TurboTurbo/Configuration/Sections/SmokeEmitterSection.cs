@@ -55,8 +55,6 @@ internal static class SmokeEmitterSection
             0f, 1f, false, () => f.tuning.maxShadowFloor, v => { foreach (var s in smokes) s.SetMaxShadowFloor(v); }, TweakGrade.Developer);
         section.AddFloat("Max dispersion speed", "Locomotive speed [m/s] at which dispersion reaches full strength.",
             1f, 30f, true, () => f.tuning.speedNormMax, v => { foreach (var s in smokes) s.tuning.speedNormMax = v; }, TweakGrade.Developer);
-        section.AddFloat("Dispersion lifetime multiplier", "Particle lifetime multiplier at full dispersion.",
-            0f, 1f, true, () => f.tuning.speedLifetimeScale, v => { foreach (var s in smokes) s.tuning.speedLifetimeScale = v; }, TweakGrade.Developer);
         section.AddFloat("Dispersion growth multiplier", "Particle growth rate multiplier at full dispersion.",
             1f, 5f, true, () => f.tuning.speedGrowthScale, v => { foreach (var s in smokes) s.tuning.speedGrowthScale = v; }, TweakGrade.Developer);
         section.AddFloat("Dispersion jitter", "Extra emission jitter [m/s] at full dispersion.",

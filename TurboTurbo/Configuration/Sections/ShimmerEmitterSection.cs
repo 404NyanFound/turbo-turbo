@@ -65,8 +65,6 @@ internal static class ShimmerEmitterSection
             0f, 4f, false, () => f.tuning.speedMultiplier, v => { foreach (var s in shimmers) s.tuning.speedMultiplier = v; }, TweakGrade.Developer);
         section.AddFloat("Max dispersion speed", "Locomotive speed [m/s] at which dispersion reaches full strength.",
             1f, 30f, false, () => f.tuning.speedNormMax, v => { foreach (var s in shimmers) s.tuning.speedNormMax = v; }, TweakGrade.Developer);
-        section.AddFloat("Dispersion lifetime multiplier", "Particle lifetime multiplier at full dispersion.",
-            0f, 1f, false, () => f.tuning.speedLifetimeScale, v => { foreach (var s in shimmers) s.tuning.speedLifetimeScale = v; }, TweakGrade.Developer);
         section.AddFloat("Dispersion jitter", "Extra emission jitter [m/s] at full dispersion.",
             0f, 2f, false, () => f.tuning.speedJitter, v => { foreach (var s in shimmers) s.tuning.speedJitter = v; }, TweakGrade.Developer);
         section.AddFloat("Y-offset", "Vertical offset [m] of the emission point relative to the exhaust. " +

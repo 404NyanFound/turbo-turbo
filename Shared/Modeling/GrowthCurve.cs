@@ -52,9 +52,9 @@ namespace TurboTurbo.Modeling
         /// The curve applies to all live particles, so a falling coefficient shrinks them. Size
         /// <c>1 + C·(age/L)^p</c> keeps growing while <c>C</c> falls by at most <c>p/age</c> per second
         /// (logarithmically), so falls are limited to the rate that particles living up to
-        /// <paramref name="maxLifetime"/> [s] tolerate. Rises apply immediately.
+        /// <paramref name="lifetime"/> [s] tolerate. Rises apply immediately.
         /// </remarks>
-        public bool SetGrowth(float growth, float lifetime, float maxLifetime, float dt)
+        public bool SetGrowth(float growth, float lifetime, float dt)
         {
             var target = Mathf.Max(0f, growth) * Mathf.Pow(Mathf.Max(0f, lifetime) / ReferenceAge, Exponent);
             if (target >= _coefficient)
@@ -63,7 +63,7 @@ namespace TurboTurbo.Modeling
             }
             else
             {
-                var decay = Mathf.Exp(-Exponent / Mathf.Max(0.01f, maxLifetime) * dt);
+                var decay = Mathf.Exp(-Exponent / Mathf.Max(0.01f, lifetime) * dt);
                 _coefficient = Mathf.Max(target, _coefficient * decay);
             }
 

@@ -14,7 +14,6 @@ public sealed class ShimmerEmitterXml
     internal const float DefaultDrag = 0.8f;
     internal const float DefaultBuoyancy = 0.65f;
     internal const float DefaultSpeedNormMax = 15f;
-    internal const float DefaultSpeedLifetimeScale = 0.4f;
     internal const float DefaultSpeedJitter = 0.5f;
     internal const float DefaultStrength = 0.014f;
     internal const float DefaultBaseStrength = 0.1f;
@@ -57,9 +56,6 @@ public sealed class ShimmerEmitterXml
 
     [DefaultValue(DefaultSpeedNormMax)]
     public float speedNormMax = DefaultSpeedNormMax;
-
-    [DefaultValue(DefaultSpeedLifetimeScale)]
-    public float speedLifetimeScale = DefaultSpeedLifetimeScale;
 
     [DefaultValue(DefaultSpeedJitter)]
     public float speedJitter = DefaultSpeedJitter;

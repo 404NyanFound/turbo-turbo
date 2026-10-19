@@ -105,7 +105,6 @@ public sealed class LocoProfile
         Smoke.Validate();
 
         SmokeEmitter ??= new SmokeParticles.Settings();
-        SmokeEmitter.Validate();
 
         ShimmerEmitter ??= new ShimmerParticles.Settings();
 

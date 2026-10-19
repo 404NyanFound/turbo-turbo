@@ -81,7 +81,6 @@ namespace TurboTurbo.Effects
             internal const float DefaultDrag = 0.6f;
             internal const float DefaultAngularVelocityMax = 20f;
             internal const float DefaultSpeedNormMax = 15f;
-            internal const float DefaultSpeedLifetimeScale = 0.3f;
             internal const float DefaultSpeedGrowthScale = 2.2f;
             internal const float DefaultSpeedJitter = 0.5f;
             internal const float DefaultTurbulenceStrengthMin = 0.125f;
@@ -106,8 +105,6 @@ namespace TurboTurbo.Effects
             public float angularVelocityMax = DefaultAngularVelocityMax;
 
             public float speedNormMax = DefaultSpeedNormMax;
-
-            public float speedLifetimeScale = DefaultSpeedLifetimeScale;
 
             public float speedGrowthScale = DefaultSpeedGrowthScale;
 
@@ -139,7 +136,6 @@ namespace TurboTurbo.Effects
                 drag = other.drag;
                 angularVelocityMax = other.angularVelocityMax;
                 speedNormMax = other.speedNormMax;
-                speedLifetimeScale = other.speedLifetimeScale;
                 speedGrowthScale = other.speedGrowthScale;
                 speedJitter = other.speedJitter;
                 turbulenceStrengthMin = other.turbulenceStrengthMin;
@@ -148,12 +144,6 @@ namespace TurboTurbo.Effects
                 turbulenceScrollSpeed = other.turbulenceScrollSpeed;
                 lightSaturation = other.lightSaturation;
                 maxShadowFloor = other.maxShadowFloor;
-            }
-
-            public void Validate()
-            {
-                // relative wind may only shorten the lifetime
-                speedLifetimeScale = Mathf.Clamp01(speedLifetimeScale);
             }
         }
 
@@ -222,7 +212,6 @@ namespace TurboTurbo.Effects
             windFrame.Bind(_ps);
 
             var s = tuning;
-            s.Validate();
 
             // some properties are deliberately not set here; we only emit particles manually
             var main = _ps.main;
@@ -413,8 +402,6 @@ namespace TurboTurbo.Effects
                 var baseEmitVelocity = transform.forward * upSpeed;
                 var jitterVelocity = (speedNorm * s.speedJitter + 0.15f);
 
-                var lifetime = LifetimeAt(speedNorm);
-
                 var spawnColor = EncodeDensityColor(Model.Color, emissionRate);
 
                 for (var i = 0; i < n; i++)
@@ -436,7 +423,7 @@ namespace TurboTurbo.Effects
                         velocity = simSpaceVelocity,
                         startSize = Random.Range(baseSize / spread, baseSize * spread),
                         startColor = spawnColor,
-                        startLifetime = lifetime * Random.Range(1f - LifetimeJitter, 1f + LifetimeJitter),
+                        startLifetime = Lifetime * Random.Range(1f - LifetimeJitter, 1f + LifetimeJitter),
                         // random orientation + slow spin gives the appearance of a turbulent smoke column
                         rotation = Random.Range(0f, 360f),
                         angularVelocity = Random.Range(-s.angularVelocityMax, s.angularVelocityMax),
@@ -444,11 +431,6 @@ namespace TurboTurbo.Effects
                     _ps.Emit(ep, 1);
                 }
             }
-        }
-
-        private float LifetimeAt(float speedNorm)
-        {
-            return Lifetime * Mathf.Lerp(1f, tuning.speedLifetimeScale, speedNorm);
         }
 
         /// <summary>
@@ -460,8 +442,6 @@ namespace TurboTurbo.Effects
         {
             var s = tuning;
             var p = _sizeCurve.Exponent;
-            // interpolating speedGrowthScale^(-1/p) like a lifetime means speedGrowthScale = speedLifetimeScale^-p
-            // exactly cancels the lifetime change, leaving the size curve independent of wind
             var growthTime = Mathf.Pow(Mathf.Max(0.01f, s.speedGrowthScale), -1f / p);
             var w = Mathf.Pow(Mathf.Lerp(1f, growthTime, speedNorm), -p);
             return Mathf.Max(0f, s.plumeSize / Mathf.Max(0.01f, s.startSize) - 1f) * w;
@@ -473,7 +453,7 @@ namespace TurboTurbo.Effects
         private void UpdateGrowth(float speedNorm, float dt)
         {
             var growth = RelativeGrowth(speedNorm);
-            if (!_sizeCurve.SetGrowth(growth, LifetimeAt(speedNorm), Lifetime, dt)) return;
+            if (!_sizeCurve.SetGrowth(growth, Lifetime, dt)) return;
 
             var sol = _ps.sizeOverLifetime;
             sol.size = new ParticleSystem.MinMaxCurve(1f, _sizeCurve.Curve);

@@ -32,7 +32,6 @@ namespace TurboTurbo.Effects
             internal const float DefaultDrag = 0.8f;
             internal const float DefaultBuoyancy = 0.65f;
             internal const float DefaultSpeedNormMax = 15f;
-            internal const float DefaultSpeedLifetimeScale = 0.4f;
             internal const float DefaultSpeedJitter = 0.5f;
             internal const float DefaultStrength = 0.014f;
             internal const float DefaultBaseStrength = 0.1f;
@@ -65,8 +64,6 @@ namespace TurboTurbo.Effects
             public float buoyancy = DefaultBuoyancy;
 
             public float speedNormMax = DefaultSpeedNormMax;
-
-            public float speedLifetimeScale = DefaultSpeedLifetimeScale;
 
             public float speedJitter = DefaultSpeedJitter;
 
@@ -108,7 +105,6 @@ namespace TurboTurbo.Effects
                 drag = other.drag;
                 buoyancy = other.buoyancy;
                 speedNormMax = other.speedNormMax;
-                speedLifetimeScale = other.speedLifetimeScale;
                 speedJitter = other.speedJitter;
                 strength = other.strength;
                 baseStrength = other.baseStrength;
@@ -181,7 +177,7 @@ namespace TurboTurbo.Effects
             windFrame.Bind(_ps);
             main.maxParticles = ParticleBudget.Capacity(
                 Mathf.Max(s.idleRate, s.fullRate),
-                s.lifetime * Mathf.Max(1f, s.speedLifetimeScale) * (1f + LifetimeJitter));
+                s.lifetime * (1f + LifetimeJitter));
             main.gravityModifier = 0f;
 
             _sizeCurve = ParticleCurves.BakeSizeCurve(s.startSize, s.sizeOverLifetimeEnd, s.sizeOverLifetimeExponent);
@@ -267,7 +263,6 @@ namespace TurboTurbo.Effects
 
                 var upSpeed = velocity.Calculate(massFlow, gasDensity);
 
-                // relative wind tears the plume apart with speed: shorter lifetime, more dispersion jitter
                 var speedNorm = Mathf.Clamp01(windFrame.AirVelocity(locoVelocity).magnitude / s.speedNormMax);
 
                 // custom emit requires us to apply the simulation space manually
@@ -275,8 +270,6 @@ namespace TurboTurbo.Effects
 
                 var baseEmitVelocity = transform.forward * upSpeed;
                 var jitterVelocity = speedNorm * s.speedJitter + 0.15f;
-
-                var lifetime = s.lifetime * Mathf.Lerp(1f, s.speedLifetimeScale, speedNorm);
 
                 for (var i = 0; i < n; i++)
                 {
@@ -297,7 +290,7 @@ namespace TurboTurbo.Effects
                         velocity = simSpaceVelocity,
                         startSize = UnityEngine.Random.Range(baseSize / spread, baseSize * spread),
                         startColor = Color.white,
-                        startLifetime = lifetime * UnityEngine.Random.Range(1f - LifetimeJitter, 1f + LifetimeJitter),
+                        startLifetime = s.lifetime * UnityEngine.Random.Range(1f - LifetimeJitter, 1f + LifetimeJitter),
                     };
                     _ps.Emit(ep, 1);
                 }

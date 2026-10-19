@@ -46,6 +46,8 @@
   draw over the ice effect in Seasons, which draws a bit too late. Will be
   reverted when it is fixed in Seasons.
 - Smoke now fades away in fog.
+- Smoke plume lifetime is no longer shortened at high speed. Because the smoke
+  now fades well, this mechanism is no longer necessary.
 
 ## v1.0.0
 
