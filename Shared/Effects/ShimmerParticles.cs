@@ -233,7 +233,7 @@ namespace TurboTurbo.Effects
 
         private void OnValidate()
         {
-            if (Application.isPlaying) Configure();
+            if (Application.isPlaying && windFrame != null) Configure();
         }
 
         public void SetFlow(float newHeat)
