@@ -4,20 +4,22 @@ using UnityEngine;
 
 namespace TurboTurbo.WorkBench
 {
-    public static class WorkBenchSetup
+    public static class BenchSceneSetup
     {
+        private const string ScenePath = "Assets/Bench/Exhaust.unity";
+
         [MenuItem("TurboTurbo/WorkBench Scene")]
         public static void CreateScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            var go = new GameObject("ShimmerBench");
-            go.AddComponent<ShimmerBench>();
+            var go = new GameObject("ExhaustBench");
+            go.AddComponent<ExhaustBench>();
 
             GameAssetsImport.AddDe6ToScene();
 
-            EditorSceneManager.SaveScene(scene, "Assets/Shimmer/Bench.unity");
-            Debug.Log("WorkBench: bench scene created at Assets/Shimmer/Bench.unity");
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            Debug.Log($"WorkBench: bench scene created at {ScenePath}");
         }
     }
 }

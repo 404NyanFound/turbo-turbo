@@ -11,8 +11,8 @@ namespace TurboTurbo.Assets;
 internal static class ModAssets
 {
     private const string BundleName = "turboturbo_assets";
-    private const string HeatShimmerAssetPath = "Assets/Shimmer/HeatShimmer.shader";
-    private const string SmokeAssetPath = "Assets/Shimmer/SmokeShader.shader";
+    private const string HeatShimmerAssetPath = "Packages/com.turboturbo.shared/Shaders/HeatShimmer.shader";
+    private const string SmokeAssetPath = "Packages/com.turboturbo.shared/Shaders/Smoke.shader";
 
     private static readonly Logger Log = TurboTurbo.Log.ForContext("assets");
 

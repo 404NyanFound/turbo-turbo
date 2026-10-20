@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace TurboTurbo.WorkBench
 {
-    public class ShimmerBench : MonoBehaviour
+    public class ExhaustBench : MonoBehaviour
     {
         [Header("Total exhaust energy")]
         [Range(0f, 1f)] public float exhaustEnergy = 1f;
@@ -84,7 +84,7 @@ namespace TurboTurbo.WorkBench
                 : null;
             if (vanillaExhaust == null)
             {
-                Debug.LogError("[ShimmerBench] no LocoDE6 with 'ExhaustEngineSmoke' in the scene, emitters not created");
+                Debug.LogError("[ExhaustBench] no LocoDE6 with 'ExhaustEngineSmoke' in the scene, emitters not created");
                 return;
             }
 

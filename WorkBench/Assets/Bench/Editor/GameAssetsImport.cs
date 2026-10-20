@@ -8,7 +8,7 @@ namespace TurboTurbo.WorkBench
     /// Wires the AssetRipper-exported DE6 into the bench scene: strips the
     /// dead DV scripts, remaps materials that reference DV's custom shaders
     /// (which don't survive the export) onto Standard, and frames the loco
-    /// so the shimmer quad sits at the exhaust stack.
+    /// in front of the bench camera.
     /// </summary>
     public static class GameAssetsImport
     {
@@ -73,10 +73,6 @@ namespace TurboTurbo.WorkBench
                 light.type = LightType.Directional;
                 lightGo.transform.rotation = Quaternion.Euler(45f, 30f, 0f);
             }
-
-            // 4. the shimmer anchor is a fixed manual value for now (set on
-            // the ShimmerBench component; the heat quad itself is created at
-            // Play time by ShimmerBench.Start())
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }

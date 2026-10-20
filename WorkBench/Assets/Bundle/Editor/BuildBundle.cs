@@ -5,8 +5,8 @@ using UnityEngine;
 
 public static class BuildBundle
 {
-    private const string HeatShimmerAsset = "Assets/Shimmer/HeatShimmer.shader";
-    private const string SmokeAsset = "Assets/Shimmer/SmokeShader.shader";
+    private const string HeatShimmerAsset = "Packages/com.turboturbo.shared/Shaders/HeatShimmer.shader";
+    private const string SmokeAsset = "Packages/com.turboturbo.shared/Shaders/Smoke.shader";
     private const string OutputPath = "AssetBundles";
     private const string BundleFile = OutputPath + "/turboturbo_assets";
     private const string BundleName = "turboturbo_assets";
