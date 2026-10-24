@@ -284,11 +284,10 @@ namespace TurboTurbo.Effects
             var rend = GetComponent<ParticleSystemRenderer>();
             _renderer = rend;
 
-            // nothing really works perfectly here, but YoungestInFront is pretty good, as you generally want newer
-            // particles to be more visible than older ones. When looking at a thick smoke trail from the back it
-            // can look a bit weird, but sorting by distance is worse as it can make particles pop through each 
-            // other over time, which looks very unnatural.
-            rend.sortMode = ParticleSystemSortMode.YoungestInFront;
+            // In VR, use Distance sorting for proper stereo depth perception.
+            // Otherwise, YoungestInFront gives better visual results for smoke plumes.
+            bool isVR = UnityEngine.XR.XRSettings.loadedDeviceName != "none";
+            rend.sortMode = isVR ? ParticleSystemSortMode.Distance : ParticleSystemSortMode.YoungestInFront;
             rend.SetActiveVertexStreams(new List<ParticleSystemVertexStream>
             {
                 ParticleSystemVertexStream.Position,
